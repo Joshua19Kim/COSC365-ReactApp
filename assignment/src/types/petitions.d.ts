@@ -8,3 +8,14 @@ type Petition = {
     ownerLastName: string,
     numberOfSupporters: number,
 }
+
+type SupportTierPost = {
+    title: string,
+    description: string,
+    cost: number
+}
+
+type PetitionWithCost = Petition & {
+    description: string,
+    cost: number
+}

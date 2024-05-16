@@ -15,11 +15,41 @@ const Petitions = () => {
     const [errorFlag, setErrorFlag] = React.useState(false)
     const [errorMessage, setErrorMessage] = React.useState("")
     const [query, setQuery] = React.useState("")
-
+    const [petitionsWithCost, setPetitionsWithCost] = React.useState<PetitionWithCost[]>([]);
 
     React.useEffect(() => {
         getPetitions()
     }, [])
+
+    React.useEffect(() => {
+        const fetchCosts = async () => {
+            const requests = petitions.map(async (petition) => {
+                try {
+                    const response = await axios.put<SupportTierPost>(`http://localhost:4941/api/v1/petitions/${petition.petitionId}/supportTiers`);
+                    return {
+                        ...petition,
+                        description: response.data.description,
+                        cost: response.data.cost
+                    };
+                } catch (error) {
+                    console.error(`Error with ${petition.petitionId}:`, error);
+                    return {
+                        ...petition,
+                        description:'',
+                        cost:0
+                    };
+                }
+            });
+
+            const results = await Promise.all(requests);
+            const validResults = results.filter((result) => result !== null) as PetitionWithCost[];
+            setPetitionsWithCost(validResults);
+        };
+
+        if (petitions.length > 0) {
+            fetchCosts();
+        }
+    }, [petitions]);
 
     const getPetitions = () => {
         axios.get('http://localhost:4941/api/v1/petitions')
@@ -39,7 +69,6 @@ const Petitions = () => {
                 setErrorFlag(false)
                 setErrorMessage("")
                 setPetitions(response.data.petitions)
-                // setSerchedNumber(response.data.count)
             }, (error) => {
                 setErrorFlag(true)
                 setErrorMessage(error.toString())
@@ -62,19 +91,6 @@ const Petitions = () => {
         }
     };
 
-    const list_of_petitions = () => {
-        return petitions.map((petition: Petition) =>
-            <tr key={petition.petitionId}>
-                <th scope="row">{petition.petitionId}</th>
-                <td>{petition.title}</td>
-
-                <td>
-                    <button type="button">Delete</button>
-                    <button type="button">Edit</button>
-                </td>
-            </tr>
-        )
-    }
     const columns: GridColDef[] = [
         { field: 'petitionImage', headerName: 'Petition Image', headerAlign: 'center', width: 130,
             align: 'center', renderCell: (aparams: GridCellParams) => {
@@ -85,8 +101,11 @@ const Petitions = () => {
                 />;
             }},
         { field: 'title', headerName: 'Title',headerAlign: 'center', width: 300, align: 'center' },
-        { field: 'ownerFirstName', headerName: 'Owner First Name',headerAlign: 'center', width: 130, align: 'center' },
-        { field: 'ownerLastName', headerName: 'Owner Last Name',headerAlign: 'center', width: 130, align: 'center' },
+        {field: 'ownerFullName', headerName: 'Owner Name', headerAlign: 'center', width: 200, align: 'center',
+            renderCell: (params: GridCellParams) => {
+                const { ownerFirstName, ownerLastName } = params.row;
+                return <span>{ownerFirstName} {ownerLastName}</span>;
+        }},
         { field: 'userImage', headerName: 'Owner Image',headerAlign: 'center', width: 130,
             align: 'center', renderCell: (params: GridCellParams) => {
                 const userId = params.row.ownerId as number;
@@ -97,6 +116,8 @@ const Petitions = () => {
         { field: 'numberOfSupporters', headerName: 'No. of Supporters',headerAlign: 'center', width: 130,
             align: 'center' },
         { field: 'creationDate', headerName: 'Creation Date',headerAlign: 'center', width: 200, align: 'center'},
+        { field: 'cost', headerName: 'Supporting Cost',headerAlign: 'center', width: 200, align: 'center'},
+
 
     ];
     const getRowId = (row:Petition) => row.petitionId;
@@ -115,19 +136,27 @@ const Petitions = () => {
         {
             return (
                 <div>
-                    <h1>Petitions</h1>
-                        <Container style={{ height: 800}}>
-                            <TextField style={{height: 25, width: '80%'}}
+                    <h1 style={{fontSize:'3rem'}}>Petitions</h1>
+                    <Container style={{
+                        display: 'flex',
+                        flexDirection: 'column',
+                        justifyContent: 'center',
+                        alignItems: 'center',
+                        height: 800
+                    }}>
+                        <div style={{display: 'flex', alignItems: 'center', width:1400}}>
+                            <TextField style={{height: 55, width: '80%'}}
                                        id="outlined-basic" label="Search Petition" variant="outlined"
-                                        value={query} onChange={searchPetitionState} onKeyPress={handleKeyPress}/>
+                                       value={query} onChange={searchPetitionState} onKeyPress={handleKeyPress}/>
                             <Button style={{height: 55, width: '20%', fontSize: '1.5rem'}} variant="contained"
                                     onClick={handleSearchClick}>Search</Button>
-                            <div style={{marginTop: '50px', height: 715, width: 1300} }>
+                        </div>
+                            <div style={{marginTop: '50px', height: 715, width: 1400}}>
                                 <DataGrid
-                                    rows={petitions}
+                                    rows={petitionsWithCost}
                                     getRowId={getRowId}
                                     rowHeight={110}
-                                    style={{alignContent:"center", justifyContent: "center",}}
+                                    style={{alignContent: "center", justifyContent: "center",}}
                                     columns={columns}
                                     initialState={{
                                         pagination: {
@@ -135,16 +164,14 @@ const Petitions = () => {
                                         },
                                     }}
                                     pageSizeOptions={[5, 10]}
-                                    // checkboxSelection
-
                                 />
                             </div>
-                        </Container>
+                    </Container>
                 </div>
-            )
+        )
         }
 
-}
+        }
 
 
-export default Petitions;
+        export default Petitions;
