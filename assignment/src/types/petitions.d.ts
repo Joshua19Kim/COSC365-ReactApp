@@ -9,13 +9,12 @@ type Petition = {
     numberOfSupporters: number,
 }
 
-type SupportTierPost = {
-    title: string,
-    description: string,
-    cost: number
+type PetitionWithCategory = Petition & {
+    categoryName: string,
 }
 
-type PetitionWithCost = Petition & {
-    description: string,
-    cost: number
+type Category = {
+    categoryId: number,
+    name: string,
+
 }

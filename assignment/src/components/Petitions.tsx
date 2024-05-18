@@ -12,57 +12,72 @@ import {format} from "node:url";
 
 const Petitions = () => {
     const [petitions, setPetitions] = React.useState<Array<Petition>>([])
+    const [categories, setCategories] = React.useState<Array<Category>>([])
+
     const [errorFlag, setErrorFlag] = React.useState(false)
     const [errorMessage, setErrorMessage] = React.useState("")
     const [query, setQuery] = React.useState("")
-    const [petitionsWithCost, setPetitionsWithCost] = React.useState<PetitionWithCost[]>([]);
+    const [petitionsWithCategory, setPetitionsWithCategory] = React.useState<PetitionWithCategory[]>([]);
 
     React.useEffect(() => {
-        getPetitions()
+        getPetitionsAndCategories()
     }, [])
 
-    React.useEffect(() => {
-        const fetchCosts = async () => {
-            const requests = petitions.map(async (petition) => {
-                try {
-                    const response = await axios.put<SupportTierPost>(`http://localhost:4941/api/v1/petitions/${petition.petitionId}/supportTiers`);
-                    return {
-                        ...petition,
-                        description: response.data.description,
-                        cost: response.data.cost
-                    };
-                } catch (error) {
-                    console.error(`Error with ${petition.petitionId}:`, error);
-                    return {
-                        ...petition,
-                        description:'',
-                        cost:0
-                    };
-                }
-            });
+    // React.useEffect(() => {
+    //     const getCategoryNames = async () => {
+    //         const requests = petitions.map(async (petition) => {
+    //             try {
+    //                 const response = await axios.get<Category>(`http://localhost:4941/api/v1/petitions/${petition.petitionId}&categoryIds=${petition.categoryId}`);
+    //                 return {
+    //                     ...petition,
+    //                     description: response.data.description,
+    //                     cost: response.data.cost
+    //                 };
+    //             } catch (error) {
+    //                 console.error(`Error with ${petition.petitionId}:`, error);
+    //                 return {
+    //                     ...petition,
+    //                     description:'',
+    //                     cost:0
+    //                 };
+    //             }
+    //         });
+    //
+    //         const results = await Promise.all(requests);
+    //         const validResults = results.filter((result) => result !== null) as PetitionWithCategory[];
+    //         setPetitionsWithCategory(validResults);
+    //     };
+    //
+    //     if (petitions.length > 0) {
+    //         getCategoryNames();
+    //     }
+    // }, [petitions]);
 
-            const results = await Promise.all(requests);
-            const validResults = results.filter((result) => result !== null) as PetitionWithCost[];
-            setPetitionsWithCost(validResults);
-        };
+    // const mergePetitionsAndCategories = () => {
+    //     const mergedData: PetitionWithCategory[] = petitions.map(petition => {
+    //         const category = categories.find(cat => cat.categoryId === petition.categoryId);
+    //         return {
+    //             ...petition,
+    //             categoryName: category ? category.name : 'Unknown',
+    //         };
+    //     });
+    //     setPetitionsWithCategory(mergedData);
+    // };
 
-        if (petitions.length > 0) {
-            fetchCosts();
-        }
-    }, [petitions]);
-
-    const getPetitions = () => {
+    const getPetitionsAndCategories = () => {
         axios.get('http://localhost:4941/api/v1/petitions')
+        axios.get('http://localhost:4941/api/v1/petitions/categories')
             .then((response) => {
                 setErrorFlag(false)
                 setErrorMessage("")
                 setPetitions(response.data.petitions)
-
+                setCategories(response.data.Category)
             }, (error) => {
                 setErrorFlag(true)
                 setErrorMessage(error.toString())
             })
     }
+
     const getQueryPetitions = () => {
         axios.get('http://localhost:4941/api/v1/petitions?q=' + query)
             .then((response) => {
@@ -80,7 +95,7 @@ const Petitions = () => {
     }
     const handleSearchClick = () => {
         if ( query.length === 0) {
-            getPetitions()
+            getPetitionsAndCategories()
         } else {
         getQueryPetitions()
             }
@@ -116,7 +131,7 @@ const Petitions = () => {
         { field: 'numberOfSupporters', headerName: 'No. of Supporters',headerAlign: 'center', width: 130,
             align: 'center' },
         { field: 'creationDate', headerName: 'Creation Date',headerAlign: 'center', width: 200, align: 'center'},
-        { field: 'cost', headerName: 'Supporting Cost',headerAlign: 'center', width: 200, align: 'center'},
+        { field: 'supportingCost', headerName: 'Supporting Cost',headerAlign: 'center', width: 200, align: 'center'},
 
 
     ];
@@ -153,7 +168,7 @@ const Petitions = () => {
                         </div>
                             <div style={{marginTop: '50px', height: 715, width: 1400}}>
                                 <DataGrid
-                                    rows={petitionsWithCost}
+                                    rows={petitions}
                                     getRowId={getRowId}
                                     rowHeight={110}
                                     style={{alignContent: "center", justifyContent: "center",}}
