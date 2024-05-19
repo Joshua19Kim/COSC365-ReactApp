@@ -1,0 +1,40 @@
+    // React.useEffect(() => {
+    //     const getCategoryNames = async () => {
+    //         const requests = petitions.map(async (petition) => {
+    //             try {
+    //                 const response = await axios.get<Category>(`http://localhost:4941/api/v1/petitions/${petition.petitionId}&categoryIds=${petition.categoryId}`);
+    //                 return {
+    //                     ...petition,
+    //                     description: response.data.description,
+    //                     cost: response.data.cost
+    //                 };
+    //             } catch (error) {
+    //                 console.error(`Error with ${petition.petitionId}:`, error);
+    //                 return {
+    //                     ...petition,
+    //                     description:'',
+    //                     cost:0
+    //                 };
+    //             }
+    //         });
+    //
+    //         const results = await Promise.all(requests);
+    //         const validResults = results.filter((result) => result !== null) as PetitionWithCategory[];
+    //         setPetitionsWithCategory(validResults);
+    //     };
+    //
+    //     if (petitions.length > 0) {
+    //         getCategoryNames();
+    //     }
+    // }, [petitions]);
+
+    // const mergePetitionsAndCategories = () => {
+    //     const mergedData: PetitionWithCategory[] = petitions.map(petition => {
+    //         const category = categories.find(cat => cat.categoryId === petition.categoryId);
+    //         return {
+    //             ...petition,
+    //             categoryName: category ? category.name : 'Unknown',
+    //         };
+    //     });
+    //     setPetitionsWithCategory(mergedData);
+    // };
