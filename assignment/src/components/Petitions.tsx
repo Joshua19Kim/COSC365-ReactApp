@@ -1,5 +1,5 @@
 import axios from 'axios';
-import React, {ChangeEvent} from "react";
+import React, {ChangeEvent, ReactNode} from "react";
 import {Link} from 'react-router-dom';
 import Petition from './Petition';
 import {DataGrid, GridCellParams, GridColDef, GridRowParams} from '@mui/x-data-grid';
@@ -7,39 +7,30 @@ import Container from '@mui/material/Container';
 import {
     Button,
     Chip,
-    FormControl,
+    FormControl, IconButton, InputAdornment,
     InputLabel, MenuItem, OutlinedInput,
     Select,
-    SelectChangeEvent,
+    SelectChangeEvent, styled,
     TextField,
     Theme,
     useTheme
 } from "@mui/material";
 import Avatar from '@mui/material/Avatar';
+import {Clear} from "@mui/icons-material";
+import * as querystring from "querystring";
 const ITEM_HEIGHT = 48;
 const ITEM_PADDING_TOP = 8;
-const MenuProps = {
-    PaperProps: {
-        style: {
-            maxHeight: ITEM_HEIGHT * 4.5 + ITEM_PADDING_TOP,
-            width: 250,
-        },
-    },
-};
-const names = [
-    'Oliver Hansen',
-    'Van Henry',
-    'April Tucker',
-    'Ralph Hubbard',
-    'Omar Alexander',
-    'Carlos Abbott',
-    'Miriam Wagner',
-    'Bradley Wilkerson',
-    'Virginia Andrews',
-    'Kelly Snyder',
-];
 
+function ClearIcon() {
+    return null;
+}
 
+const ClearButton = styled(IconButton)(({ theme }) => ({
+    position: 'absolute',
+    right: -40,
+    top: '50%',
+    transform: 'translateY(-50%)',
+}));
 
 const Petitions = () => {
     const [petitions, setPetitions] = React.useState<Array<Petition>>([])
@@ -51,16 +42,22 @@ const Petitions = () => {
     const theme = useTheme();
     const [categoryName, setCategoryName] = React.useState<string[]>([]);
     const categoryNames = categories.map(category => category.name);
+    const [maximumCost, setMaximumCost] = React.useState("");
+    const [chosenCategoriesId, setChosenCategoriesId] = React.useState<Array<number>>([])
 
+    const selectingCategories = (event: SelectChangeEvent<typeof categoryName>) => {
+        const selectedCategoryNames = event.target.value as string[];
+        const selectedCategoryIds: number[] = [];
 
-    const handleChange = (event: SelectChangeEvent<typeof categoryName>) => {
-        const {
-            target: { value },
-        } = event;
-        setCategoryName(
-            // On autofill we get a stringified value.
-            typeof value === 'string' ? value.split(',') : value,
-        );
+        selectedCategoryNames.forEach(name => {
+            const category = categories.find(category => category.name === name);
+            if(category) {
+                selectedCategoryIds.push(category.categoryId);
+            }
+        });
+        setChosenCategoriesId(selectedCategoryIds);
+        setCategoryName(selectedCategoryNames);
+
         }
 
     function getStyles(name: string, personName: string[], theme: Theme) {
@@ -76,7 +73,8 @@ const Petitions = () => {
     React.useEffect(() => {
         getPetitions()
         getCategories()
-    }, [])
+    }, [chosenCategoriesId, maximumCost, categoryName])
+
     const getCategories = () => {
     axios.get('http://localhost:4941/api/v1/petitions/categories')
         .then((response) => {
@@ -88,8 +86,31 @@ const Petitions = () => {
             setErrorMessage(error.toString())
         })
     }
+
     const getPetitions = () => {
-        axios.get('http://localhost:4941/api/v1/petitions')
+        let basicURL = 'http://localhost:4941/api/v1/petitions';
+        let queryForm = "";
+        let supportCostForm = "";
+        let categoryForm = "";
+        if (query.length !== 0) { queryForm = 'q='+query}
+
+        if (typeof maximumCost === 'number' && query.length === 0) {
+            supportCostForm = 'supportingCost='+ maximumCost;
+        } else if (typeof maximumCost === 'number' && query.length !== 0) {
+            supportCostForm = '&supportingCost='+ maximumCost;
+        } else if (maximumCost.length >0) {setMaximumCost("")}
+
+        if (chosenCategoriesId.length ===1) {
+            categoryForm = '&categoryIds=' + chosenCategoriesId[0];
+        } else if (chosenCategoriesId.length !== 0) {
+            categoryForm = chosenCategoriesId.map(id => `categoryIds=${id}`).join('&');
+        }
+
+        if (queryForm.length !== 0 || supportCostForm.length !== 0 || categoryForm.length !==0) {
+            basicURL += "?";
+        }
+        const result = basicURL + queryForm + supportCostForm + categoryForm;
+        axios.get(basicURL + queryForm + supportCostForm + categoryForm)
             .then((response) => {
                 setErrorFlag(false)
                 setErrorMessage("")
@@ -98,31 +119,20 @@ const Petitions = () => {
                 setErrorFlag(true)
                 setErrorMessage(error.toString())
             })
+        console.log(result)
     }
 
-    const getQueryPetitions = () => {
-        axios.get('http://localhost:4941/api/v1/petitions?q=' + query)
-            .then((response) => {
-                setErrorFlag(false)
-                setErrorMessage("")
-                setPetitions(response.data.petitions)
-            }, (error) => {
-                setErrorFlag(true)
-                setErrorMessage(error.toString())
-            })
+    const checkMinimumCostState = (event:ChangeEvent<HTMLInputElement>) => {
+        setMaximumCost(event.target.value)
     }
-
     const searchPetitionState = (event:ChangeEvent<HTMLInputElement>) => {
         setQuery(event.target.value)
     }
     const handleSearchClick = () => {
-        if ( query.length === 0) {
-            getPetitions()
-        } else {
-        getQueryPetitions()
-            }
+        getPetitions()
+
     }
-    const handleKeyPress = (event: any) => {
+    const handleKeyPressEnter = (event: any) => {
         if (event.key === 'Enter') {
             handleSearchClick();
         }
@@ -138,13 +148,13 @@ const Petitions = () => {
                 />;
             }},
         { field: 'title', headerName: 'Title',headerAlign: 'center', width: 310, align: 'center', filterable:false,},
-        { field: 'categories', headerName: 'Category',headerAlign: 'center', width: 210, align: 'center', filterable:false,
+        { field: 'categories', headerName: 'Category',headerAlign: 'center', width: 210, align: 'center', filterable:false, sortable: false,
             renderCell: (params: GridCellParams) => {
                 const categoryId = params.row.categoryId as number;
                 const category = categories.find(cat => cat.categoryId === categoryId);
                 return <span>{category ? category.name : 'Unknown'}</span>
             }},
-        {field: 'ownerFullName', headerName: 'Owner Name', headerAlign: 'center', width: 200, align: 'center', filterable:false,
+        {field: 'ownerFullName', headerName: 'Owner Name', headerAlign: 'center', width: 200, align: 'center', filterable:false, sortable: false,
             renderCell: (params: GridCellParams) => {
                 const { ownerFirstName, ownerLastName } = params.row;
                 return <span>{ownerFirstName} {ownerLastName}</span>;
@@ -194,34 +204,51 @@ const Petitions = () => {
                         <div style={{display: 'flex', alignItems: 'center', width: 1400}}>
                             <TextField style={{height: 55, width: '80%'}}
                                        id="outlined-basic" label="Search Petition" variant="outlined"
-                                       value={query} onChange={searchPetitionState} onKeyPress={handleKeyPress}/>
+                                       value={query} onChange={searchPetitionState} onKeyPress={handleKeyPressEnter}/>
                             <Button style={{height: 55, width: '20%', fontSize: '1.5rem'}} variant="contained"
                                     onClick={handleSearchClick}>Search</Button>
                         </div>
-                        <div style={{display: 'flex', alignItems: 'center', width: 1400}}>
-                            <FormControl sx={{m: 1, width: 1000}}>
-                                <InputLabel id="demo-multiple-name-label">Category</InputLabel>
-                                <Select
-                                    labelId="demo-multiple-name-label"
-                                    id="demo-multiple-name"
-                                    multiple
-                                    value={categoryName}
-                                    onChange={handleChange}
-                                    input={<OutlinedInput label="Name"/>}
-                                    MenuProps={MenuProps}
-                                >
-                                    {categoryNames.map((name) => (
-                                        <MenuItem
-                                            key={name}
-                                            value={name}
-                                            style={getStyles(name, categoryName, theme)}
-                                        >
-                                            {name}
-                                        </MenuItem>
-                                    ))}
-                                </Select>
-                            </FormControl>
-                        </div>
+                        <Container style={{
+                            display: 'flex',
+                            flexDirection: 'column',
+                            justifyContent: 'center',
+                            alignItems: 'center',
+                            height: 800
+                        }}>
+                            <div style={{display: 'flex', alignItems: 'center', width: 1400}}>
+                                <FormControl sx={{m: 1, width: 1000}}>
+                                    <InputLabel id="demo-multiple-name-label">Category</InputLabel>
+                                    <Select
+                                        labelId="demo-multiple-name-label"
+                                        id="demo-multiple-name"
+                                        multiple
+                                        value={categoryName}
+                                        onChange={selectingCategories}
+                                        input={<OutlinedInput style={{textAlign: "left"}} label="Name"/>}
+                                        MenuProps={{
+                                            PaperProps: {
+                                                style: {
+                                                    maxHeight: 48 * 4.5 + 8,
+                                                    width: 250,
+                                                },
+                                            },
+                                        }}
+                                    >
+                                        {categoryNames.map((name) => (
+                                            <MenuItem
+                                                key={name}
+                                                value={name}
+                                                style={getStyles(name, categoryName, theme)}
+                                            >
+                                                {name}
+                                            </MenuItem>
+                                        ))}
+                                    </Select>
+                                </FormControl>
+                                <TextField id="outlined-basic" label="Maximum Cost" variant="outlined" value={maximumCost} onChange={checkMinimumCostState} onKeyPress={handleKeyPressEnter}/>
+                            </div>
+                        </Container>
+
                         <div style={{marginTop: '50px', height: 715, width: 1400}}>
                             <DataGrid
                                 rows={petitions}
