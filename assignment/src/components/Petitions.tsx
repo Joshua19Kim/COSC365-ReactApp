@@ -94,16 +94,16 @@ const Petitions = () => {
         let categoryForm = "";
         if (query.length !== 0) { queryForm = 'q='+query}
 
-        if (typeof maximumCost === 'number' && query.length === 0) {
+        if ( maximumCost !== ""  && query.length === 0) {
             supportCostForm = 'supportingCost='+ maximumCost;
-        } else if (typeof maximumCost === 'number' && query.length !== 0) {
+        } else if (maximumCost !== "" && query.length !== 0) {
             supportCostForm = '&supportingCost='+ maximumCost;
-        } else if (maximumCost.length >0) {setMaximumCost("")}
+        }
 
         if (chosenCategoriesId.length ===1) {
             categoryForm = '&categoryIds=' + chosenCategoriesId[0];
         } else if (chosenCategoriesId.length !== 0) {
-            categoryForm = chosenCategoriesId.map(id => `categoryIds=${id}`).join('&');
+            categoryForm = chosenCategoriesId.map(id => `&categoryIds=${id}`).join('&');
         }
 
         if (queryForm.length !== 0 || supportCostForm.length !== 0 || categoryForm.length !==0) {
@@ -123,7 +123,7 @@ const Petitions = () => {
     }
 
     const checkMinimumCostState = (event:ChangeEvent<HTMLInputElement>) => {
-        setMaximumCost(event.target.value)
+        setMaximumCost(!isNaN(Number(event.target.value)) ? event.target.value : "");
     }
     const searchPetitionState = (event:ChangeEvent<HTMLInputElement>) => {
         setQuery(event.target.value)
@@ -173,7 +173,13 @@ const Petitions = () => {
                 return <span>{creationDate}</span>;
             }
         },
-        { field: 'supportingCost', headerName: 'Supporting Cost',headerAlign: 'center', width: 200, align: 'center', filterable:false,},
+        { field: 'supportingCost', headerName: 'Supporting Cost',headerAlign: 'center', width: 170, align: 'center', filterable:false,},
+        { field: 'view', headerName: 'View Details', headerAlign: 'center', width: 100, align: 'center', filterable:false, sortable:false,
+            renderCell: (params: GridCellParams) => {
+            const petitionId = params.row.petitionId as number;
+                return <Link to={"/petitions/" + petitionId}> <Button variant="contained">View</Button> </Link>
+            }
+        },
 
 
     ];
@@ -195,11 +201,11 @@ const Petitions = () => {
                 <div>
                     <h1 style={{fontSize: '3rem'}}>Petitions</h1>
                     <Container style={{
-                        display: 'flex',
+                        display: 'grid',
                         flexDirection: 'column',
                         justifyContent: 'center',
                         alignItems: 'center',
-                        height: 800
+                        height: 100
                     }}>
                         <div style={{display: 'flex', alignItems: 'center', width: 1400}}>
                             <TextField style={{height: 55, width: '80%'}}
@@ -209,14 +215,15 @@ const Petitions = () => {
                                     onClick={handleSearchClick}>Search</Button>
                         </div>
                         <Container style={{
-                            display: 'flex',
+                            display: 'grid',
                             flexDirection: 'column',
                             justifyContent: 'center',
                             alignItems: 'center',
-                            height: 800
+                            height: 80,
+                            width: 1400
                         }}>
-                            <div style={{display: 'flex', alignItems: 'center', width: 1400}}>
-                                <FormControl sx={{m: 1, width: 1000}}>
+                            <div style={{display: 'grid',width: 1400}}>
+                                <FormControl sx={{m: 1, width: '60%'}}>
                                     <InputLabel id="demo-multiple-name-label">Category</InputLabel>
                                     <Select
                                         labelId="demo-multiple-name-label"
@@ -245,11 +252,15 @@ const Petitions = () => {
                                         ))}
                                     </Select>
                                 </FormControl>
-                                <TextField id="outlined-basic" label="Maximum Cost" variant="outlined" value={maximumCost} onChange={checkMinimumCostState} onKeyPress={handleKeyPressEnter}/>
+                                <FormControl sx={{m: 1, width: '20%'}}>
+                                <TextField id="outlined-basic" label="Maximum Cost" variant="outlined"
+                                           value={maximumCost} onChange={checkMinimumCostState} onKeyPress={handleKeyPressEnter}/>
+                                </FormControl>
+
                             </div>
                         </Container>
 
-                        <div style={{marginTop: '50px', height: 715, width: 1400}}>
+                        <div style={{marginTop: '70px', height: 715, width: 1400}}>
                             <DataGrid
                                 rows={petitions}
                                 getRowId={getRowId}
