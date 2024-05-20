@@ -11,8 +11,8 @@ function App() {
             <Router>
                 <div>
                     <Routes>
-                        <Route path="/petition/:id" element={<Petition/>}/>
-                        <Route path="/petitions" element={<Petitions/>}/>
+                        <Route path="/petitions/:id" element={<Petition/>}/>
+                        <Route path="/" element={<Petitions/>}/>
                         <Route path="*" element={<NotFound/>}/>
                     </Routes>
                 </div>

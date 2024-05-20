@@ -5,6 +5,7 @@ import Petition from './Petition';
 import {DataGrid, GridCellParams, GridColDef, GridRowParams} from '@mui/x-data-grid';
 import Container from '@mui/material/Container';
 import {
+    Box,
     Button,
     Chip,
     FormControl, IconButton, InputAdornment,
@@ -18,12 +19,12 @@ import {
 import Avatar from '@mui/material/Avatar';
 import {Clear} from "@mui/icons-material";
 import * as querystring from "querystring";
-const ITEM_HEIGHT = 48;
-const ITEM_PADDING_TOP = 8;
 
-function ClearIcon() {
-    return null;
-}
+const Div = styled('div')(({ theme }) => ({
+    ...theme.typography.button,
+    backgroundColor: theme.palette.background.paper,
+    padding: theme.spacing(1),
+}));
 
 const ClearButton = styled(IconButton)(({ theme }) => ({
     position: 'absolute',
@@ -31,6 +32,14 @@ const ClearButton = styled(IconButton)(({ theme }) => ({
     top: '50%',
     transform: 'translateY(-50%)',
 }));
+function getStyles(name: string, personName: string[], theme: Theme) {
+    return {
+        fontWeight:
+            personName.indexOf(name) === -1
+                ? theme.typography.fontWeightRegular
+                : theme.typography.fontWeightMedium,
+    };
+}
 
 const Petitions = () => {
     const [petitions, setPetitions] = React.useState<Array<Petition>>([])
@@ -59,16 +68,6 @@ const Petitions = () => {
         setCategoryName(selectedCategoryNames);
 
         }
-
-    function getStyles(name: string, personName: string[], theme: Theme) {
-        return {
-            fontWeight:
-                personName.indexOf(name) === -1
-                    ? theme.typography.fontWeightRegular
-                    : theme.typography.fontWeightMedium,
-        };
-    }
-
 
     React.useEffect(() => {
         getPetitions()
@@ -109,7 +108,6 @@ const Petitions = () => {
         if (queryForm.length !== 0 || supportCostForm.length !== 0 || categoryForm.length !==0) {
             basicURL += "?";
         }
-        const result = basicURL + queryForm + supportCostForm + categoryForm;
         axios.get(basicURL + queryForm + supportCostForm + categoryForm)
             .then((response) => {
                 setErrorFlag(false)
@@ -119,7 +117,6 @@ const Petitions = () => {
                 setErrorFlag(true)
                 setErrorMessage(error.toString())
             })
-        console.log(result)
     }
 
     const checkMinimumCostState = (event:ChangeEvent<HTMLInputElement>) => {
@@ -199,31 +196,26 @@ const Petitions = () => {
         {
             return (
                 <div>
-                    <h1 style={{fontSize: '3rem'}}>Petitions</h1>
+                    <h1 style={{fontSize: '40px'}}>Petitions</h1>
                     <Container style={{
-                        display: 'grid',
+                        position: 'relative',
                         flexDirection: 'column',
                         justifyContent: 'center',
                         alignItems: 'center',
-                        height: 100
+                        height: 100,
+                        marginLeft:200,
+
                     }}>
-                        <div style={{display: 'flex', alignItems: 'center', width: 1400}}>
+                        <Box style={{display: 'flex', alignItems: 'center', width: 1400}}>
                             <TextField style={{height: 55, width: '80%'}}
                                        id="outlined-basic" label="Search Petition" variant="outlined"
                                        value={query} onChange={searchPetitionState} onKeyPress={handleKeyPressEnter}/>
                             <Button style={{height: 55, width: '20%', fontSize: '1.5rem'}} variant="contained"
                                     onClick={handleSearchClick}>Search</Button>
-                        </div>
-                        <Container style={{
-                            display: 'grid',
-                            flexDirection: 'column',
-                            justifyContent: 'center',
-                            alignItems: 'center',
-                            height: 80,
-                            width: 1400
-                        }}>
-                            <div style={{display: 'grid',width: 1400}}>
-                                <FormControl sx={{m: 1, width: '60%'}}>
+
+                        </Box>
+                        <Box style={{display: 'flex', alignItems: 'center', width: 1400}}>
+                                <FormControl sx={{m: 1, width: '80%'}}>
                                     <InputLabel id="demo-multiple-name-label">Category</InputLabel>
                                     <Select
                                         labelId="demo-multiple-name-label"
@@ -253,14 +245,14 @@ const Petitions = () => {
                                     </Select>
                                 </FormControl>
                                 <FormControl sx={{m: 1, width: '20%'}}>
-                                <TextField id="outlined-basic" label="Maximum Cost" variant="outlined"
-                                           value={maximumCost} onChange={checkMinimumCostState} onKeyPress={handleKeyPressEnter}/>
+                                    <TextField id="outlined-basic" label="Maximum Cost" variant="outlined"
+                                               value={maximumCost} onChange={checkMinimumCostState}
+                                               onKeyPress={handleKeyPressEnter}/>
                                 </FormControl>
 
-                            </div>
-                        </Container>
-
-                        <div style={{marginTop: '70px', height: 715, width: 1400}}>
+                        </Box>
+                        <Div style={{color:'blue'}}>Click the column name to sort</Div>
+                        <Box style={{ height: 715, width: 1400}}>
                             <DataGrid
                                 rows={petitions}
                                 getRowId={getRowId}
@@ -274,7 +266,8 @@ const Petitions = () => {
                                 }}
                                 pageSizeOptions={[5, 6, 7, 8, 9, 10]}
                             />
-                        </div>
+
+                        </Box>
                     </Container>
                 </div>
             )
