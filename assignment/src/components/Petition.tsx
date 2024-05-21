@@ -171,9 +171,9 @@ const Petition = () => {
                             maxWidth: '800px'
                         }}>
                             <Box height={1000} width={800} display="flex" flexDirection="column" alignItems="center" justifyContent="center">
-                                <Box height={1000} width={800} display="flex" flexDirection="row" alignItems="flex-start" justifyContent="flex-start">
+                                <Box height={1000} width={700} display="flex" flexDirection="row" alignItems="flex-start" justifyContent="flex-start">
 
-                                    <Box height={600} width={400} display="flex" flexDirection="column" alignItems="flex-start" justifyContent="flex-start" marginTop={20}>
+                                    <Box height={600} width={400} display="flex" flexDirection="column" alignItems="flex-start" justifyContent="flex-start" marginTop={10}>
                                         <Box height={300} width={300} display="flex" alignItems="center" justifyContent="center" p={1} sx={{ border: '0.2px solid grey' }}>
                                             {petitionImage ? (
                                                 <img
@@ -194,10 +194,13 @@ const Petition = () => {
                                         </Box>
                                     </Box>
 
-                                    <Box height={200} width={400} display="flex" marginRight="20px" flexDirection="column" justifyContent="center" alignItems="center" >
-                                        <Box position="absolute" top={10} flexDirection="column" justifyContent="center" alignItems="center" textAlign="center">
-                                            <Div>No.Supporters: {petition.numberOfSupporters}</Div>
-                                            <Div>Total money raised: ${petition.moneyRaised}</Div>
+                                    <Box height={200} width={300} display="flex" marginRight="20px" flexDirection="column" justifyContent="center" alignItems="center" >
+                                        <Box position="absolute" top={10} flexDirection="column" justifyContent="center" alignItems="center" textAlign="center" marginTop={'10px'}>
+                                            <Div>No.Supporters</Div>
+                                            <Div>{petition.numberOfSupporters}</Div>
+                                            <Div>Total money raised</Div>
+                                            <Div>{petition.moneyRaised}</Div>
+
                                         </Box>
                                         <Box position="absolute" top={200} flexDirection="column" justifyContent="center" alignItems="center" textAlign="center">
                                             <Div>{"-Description-"}</Div>
@@ -205,71 +208,6 @@ const Petition = () => {
                                         </Box>
                                     </Box>
 
-                                </Box>
-
-                                <Box marginBottom={"50px"} marginTop={"50px"} maxWidth={"900px"}>
-                                    <Div style={{fontSize: 30}}>{"-Similar Petitions-"}</Div>
-                                    <TableContainer component={Paper}>
-                                        <Table sx={{ minWidth: 600 }} size="small" aria-label="a dense table">
-                                            <TableHead>
-                                                <TableRow>
-                                                    <TableCell>Petition Image</TableCell>
-                                                    <TableCell>Title</TableCell>
-                                                    <TableCell align="left">Category</TableCell>
-                                                    <TableCell align="center">Owner</TableCell>
-                                                    <TableCell align="right">Creation Date</TableCell>
-                                                    <TableCell align="right">Supporting Cost</TableCell>
-                                                    <TableCell align="right">View Details</TableCell>
-                                                </TableRow>
-                                            </TableHead>
-                                            <TableBody>
-                                                {similarPetitions.map((row) => (
-                                                    <TableRow
-                                                        key={row.petitionId}
-                                                        sx={{ '&:last-child td, &:last-child th': { border: 0 } }}>
-                                                        <TableCell component="th" scope="row">
-                                                            <div style={{
-                                                                display: 'flex',
-                                                                alignItems: 'center',
-                                                            }}>
-                                                                <img src={'http://localhost:4941/api/v1/petitions/' + row.petitionId + "/image"}
-                                                                     alt="Petition Image"
-                                                                     style={{ maxWidth: '100px', height: "auto" }}
-                                                                />
-                                                            </div>
-                                                        </TableCell>
-                                                        <TableCell>{row.title}</TableCell>
-                                                        <TableCell>{getCategoryName(row.categoryId)}</TableCell>
-                                                        <TableCell align="left">
-                                                            <div style={{
-                                                                display: 'flex',
-                                                                alignItems: 'left',
-                                                                marginLeft: "40px"
-                                                            }}>
-                                                                {row.ownerFirstName} {row.ownerLastName}
-                                                                <Avatar
-                                                                    style={{
-                                                                        marginRight: '8px',
-                                                                        width: 80,
-                                                                        height: 80,
-                                                                        borderRadius: '50%',
-                                                                        overflow: 'hidden',
-                                                                    }}
-                                                                    src={`http://localhost:4941/api/v1/users/${row.ownerId}/image`}
-                                                                    alt={`${row.ownerFirstName} ${row.ownerLastName}`}
-                                                                />
-                                                            </div>
-                                                        </TableCell>
-                                                        <TableCell align="right">{tidyUpTime(row.creationDate)}</TableCell>
-                                                        <TableCell align="right">${row.supportingCost}</TableCell>
-                                                        <TableCell><Link to={"/petitions/" + row.petitionId}> <Button variant="contained">View</Button> </Link></TableCell>
-
-
-                                                    </TableRow>
-                                                ))}
-                                            </TableBody>
-                                        </Table>
-                                    </TableContainer>
                                 </Box>
                             </Box>
 
@@ -279,8 +217,8 @@ const Petition = () => {
                         <Container
                             style={{
                                 position: 'relative',
-                                height: 700,
-                                width: 830,
+                                height: 800,
+                                width: 930,
                                 display: 'flex',
                                 flexDirection: "column"
                             }}>
@@ -360,18 +298,75 @@ const Petition = () => {
                                     </Table>
                                 </TableContainer>
                             </Box>
+
+                            <Box marginBottom={"50px"} marginTop={"50px"} maxWidth={"1000px"}>
+                                <Div style={{fontSize: 30}}>{"-Similar Petitions-"}</Div>
+                                <TableContainer component={Paper}>
+                                    <Table sx={{ minWidth: 700 }} size="small" aria-label="a dense table">
+                                        <TableHead>
+                                            <TableRow>
+                                                <TableCell>Petition Image</TableCell>
+                                                <TableCell>Title</TableCell>
+                                                <TableCell align="left">Category</TableCell>
+                                                <TableCell align="center">Owner</TableCell>
+                                                <TableCell align="right">Creation Date</TableCell>
+                                                <TableCell align="right">Supporting Cost</TableCell>
+                                                <TableCell align="right">View Details</TableCell>
+                                            </TableRow>
+                                        </TableHead>
+                                        <TableBody>
+                                            {similarPetitions.map((row) => (
+                                                <TableRow
+                                                    key={row.petitionId}
+                                                    sx={{ '&:last-child td, &:last-child th': { border: 0 } }}>
+                                                    <TableCell component="th" scope="row">
+                                                        <div style={{
+                                                            display: 'flex',
+                                                            alignItems: 'center',
+                                                        }}>
+                                                            <img src={'http://localhost:4941/api/v1/petitions/' + row.petitionId + "/image"}
+                                                                 alt="Petition Image"
+                                                                 style={{ maxWidth: '100px', height: "auto" }}
+                                                            />
+                                                        </div>
+                                                    </TableCell>
+                                                    <TableCell>{row.title}</TableCell>
+                                                    <TableCell>{getCategoryName(row.categoryId)}</TableCell>
+                                                    <TableCell align="left">
+                                                        <div style={{
+                                                            display: 'flex',
+                                                            alignItems: 'left',
+                                                            marginLeft: "40px"
+                                                        }}>
+                                                            {row.ownerFirstName} {row.ownerLastName}
+                                                            <Avatar
+                                                                style={{
+                                                                    marginRight: '8px',
+                                                                    width: 80,
+                                                                    height: 80,
+                                                                    borderRadius: '50%',
+                                                                    overflow: 'hidden',
+                                                                }}
+                                                                src={`http://localhost:4941/api/v1/users/${row.ownerId}/image`}
+                                                                alt={`${row.ownerFirstName} ${row.ownerLastName}`}
+                                                            />
+                                                        </div>
+                                                    </TableCell>
+                                                    <TableCell align="right">{tidyUpTime(row.creationDate)}</TableCell>
+                                                    <TableCell align="right">${row.supportingCost}</TableCell>
+                                                    <TableCell><Link to={"/petitions/" + row.petitionId}> <Button variant="contained">View</Button> </Link></TableCell>
+
+
+                                                </TableRow>
+                                            ))}
+                                        </TableBody>
+                                    </Table>
+                                </TableContainer>
+                            </Box>
+
                         </Container>
                     </Container>
-                    <Container
-                        style={{
-                            position: 'relative',
-                            height: 700,
-                            width: 1500,
-                            display: 'flex',
-                            flexDirection: "column"
-                        }}>
 
-                    </Container>
             </div>
         )
     }

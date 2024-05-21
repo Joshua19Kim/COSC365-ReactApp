@@ -17,8 +17,7 @@ import {
     useTheme
 } from "@mui/material";
 import Avatar from '@mui/material/Avatar';
-import {Clear} from "@mui/icons-material";
-import * as querystring from "querystring";
+import navBar from './navBar';
 
 const Div = styled('div')(({ theme }) => ({
     ...theme.typography.button,
@@ -195,6 +194,7 @@ const Petitions = () => {
     else
         {
             return (
+
                 <div>
                     <h1 style={{fontSize: '40px'}}>Petitions</h1>
                     <Container style={{
@@ -270,6 +270,8 @@ const Petitions = () => {
                         </Box>
                     </Container>
                 </div>
+
+
             )
         }
 
