@@ -17,7 +17,7 @@ import {
     useTheme
 } from "@mui/material";
 import Avatar from '@mui/material/Avatar';
-import navBar from './navBar';
+import ResponsiveAppBar from './ResponsiveAppBar';
 
 const Div = styled('div')(({ theme }) => ({
     ...theme.typography.button,
@@ -134,6 +134,19 @@ const Petitions = () => {
         }
     };
 
+    const formatDate = (date : string) => {
+        const formattedDate = new Date(date);
+        return formattedDate.toLocaleString('en-NZ', {
+            timeZone: 'Pacific/Auckland',
+            day: '2-digit',
+            month: 'short',
+            year: 'numeric',
+            hour: '2-digit',
+            minute: '2-digit',
+            hour12: true,
+        });
+    }
+
     const columns: GridColDef[] = [
         { field: 'petitionImage', headerName: 'Petition Image', headerAlign: 'center', width: 130, sortable: false, filterable:false,
             align: 'center', renderCell: (aparams: GridCellParams) => {
@@ -163,13 +176,13 @@ const Petitions = () => {
 
             }},
 
-        { field: 'creationDate', headerName: 'Creation Date',headerAlign: 'center', width: 140, align: 'center', filterable:false,
+        { field: 'creationDate', headerName: 'Creation Date',headerAlign: 'center', width: 180, align: 'center', filterable:false,
             renderCell: (params: GridCellParams) => {
-                const creationDate = new Date(params.row.creationDate).toISOString().split('T')[0];
+                const creationDate = formatDate(params.row.creationDate)
                 return <span>{creationDate}</span>;
             }
         },
-        { field: 'supportingCost', headerName: 'Supporting Cost',headerAlign: 'center', width: 170, align: 'center', filterable:false,},
+        { field: 'supportingCost', headerName: 'Supporting Cost',headerAlign: 'center', width: 130, align: 'center', filterable:false,},
         { field: 'view', headerName: 'View Details', headerAlign: 'center', width: 100, align: 'center', filterable:false, sortable:false,
             renderCell: (params: GridCellParams) => {
             const petitionId = params.row.petitionId as number;
@@ -196,6 +209,7 @@ const Petitions = () => {
             return (
 
                 <div>
+                    <ResponsiveAppBar />
                     <h1 style={{fontSize: '40px'}}>Petitions</h1>
                     <Container style={{
                         position: 'relative',

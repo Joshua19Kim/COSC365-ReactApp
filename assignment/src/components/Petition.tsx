@@ -18,6 +18,7 @@ import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import Avatar from "@mui/material/Avatar";
 import {Simulate} from "react-dom/test-utils";
 import error = Simulate.error;
+import ResponsiveAppBar from "./ResponsiveAppBar";
 
 
 const Div = styled('div')(({ theme }) => ({
@@ -130,8 +131,17 @@ const Petition = () => {
             })
     }
 
-    const tidyUpTime = (time:string):  string => {
-        return new Date(time).toISOString().split('T')[0];
+    const formatDate = (date : string) => {
+        const formattedDate = new Date(date);
+        return formattedDate.toLocaleString('en-NZ', {
+            timeZone: 'Pacific/Auckland',
+            day: '2-digit',
+            month: 'short',
+            year: 'numeric',
+            hour: '2-digit',
+            minute: '2-digit',
+            hour12: true,
+        });
     }
     if (errorFlag) {
         return (
@@ -146,6 +156,7 @@ const Petition = () => {
     {
         return (
             <div>
+                <ResponsiveAppBar />
                 <div
                     style={{display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '0 20px'}}>
                     <IconButton aria-label="back to petitions" color="secondary" component={Link} to="/"
@@ -187,7 +198,7 @@ const Petition = () => {
                                             {errorFlag && <p>Error: {errorMessage}</p>}
                                         </Box>
                                         <Box display="flex" flexDirection="column" justifyContent="center" alignItems="center" textAlign="center">
-                                            <Div>Created on {petition.creationDate}</Div>
+                                            <Div>Created on {formatDate(petition.creationDate)}</Div>
                                             <Avatar style={{ width: 120, height: 120, borderRadius: '50%', overflow: 'hidden', marginTop: '40px'}}
                                                     src={'http://localhost:4941/api/v1/users/' + petition.ownerId + "/image"} />
                                             <Div style={{fontSize: '30px'}}>{petition.ownerFirstName} {petition.ownerLastName} </Div>
@@ -264,7 +275,7 @@ const Petition = () => {
                                                 <TableCell>Supporter Title</TableCell>
                                                 <TableCell>Message</TableCell>
                                                 <TableCell align="center">Name</TableCell>
-                                                <TableCell align="right">Time Stamp</TableCell>
+                                                <TableCell align="center">Time Stamp</TableCell>
                                             </TableRow>
                                         </TableHead>
                                         <TableBody>
@@ -290,7 +301,7 @@ const Petition = () => {
                                                             {row.supporterFirstName} {row.supporterLastName}
                                                         </div>
                                                     </TableCell>
-                                                    <TableCell align="right">{tidyUpTime(row.timestamp)}</TableCell>
+                                                    <TableCell align="right">{formatDate(row.timestamp)}</TableCell>
 
                                                 </TableRow>
                                             ))}
@@ -352,7 +363,7 @@ const Petition = () => {
                                                             />
                                                         </div>
                                                     </TableCell>
-                                                    <TableCell align="right">{tidyUpTime(row.creationDate)}</TableCell>
+                                                    <TableCell align="right">{formatDate(row.creationDate)}</TableCell>
                                                     <TableCell align="right">${row.supportingCost}</TableCell>
                                                     <TableCell><Link to={"/petitions/" + row.petitionId}> <Button variant="contained">View</Button> </Link></TableCell>
 
