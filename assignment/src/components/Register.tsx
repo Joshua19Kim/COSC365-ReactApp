@@ -3,8 +3,8 @@ import {Box, Button, IconButton, InputAdornment, TextField, Typography} from "@m
 import axios from 'axios';
 import { Link, useNavigate } from "react-router-dom";
 import {Visibility, VisibilityOff} from "@mui/icons-material";
+import login from "./Login";
 
-// Define the userRegister type
 type userRegister = {
     firstName: string,
     lastName: string,
@@ -19,7 +19,6 @@ const Register = () => {
     const [lastName, setLastName] = useState("");
     const [email, setEmail] = useState("");
     const [password, setPassword] = useState("");
-    const [newUserId, setNewUserId] = useState<number | null>(null);
     const [showPassword, setShowPassword] = useState(false);
     const navigate = useNavigate();
 
@@ -54,14 +53,45 @@ const Register = () => {
         .then((response) => {
             setErrorFlag(false);
             setErrorMessage("");
-            setNewUserId(response.data.userId);
-            navigate(`/user/${newUserId}`)
+            loginUser();
         }, (error) => {
             setErrorFlag(true);
-            setErrorMessage("You typed invalid input. Try again.");
+
+            if (error.response.statusText.includes("firstName must NOT")) {
+                setErrorMessage("First name must not have fewer than 1 characters.");
+            } else if (error.response.statusText.includes("lastName must NOT")) {
+                setErrorMessage("Last name must not have fewer than 1 characters.");
+            } else if (error.response.statusText.includes("data/email")) {
+                setErrorMessage("Email must match the format 'email'.");
+            } else if (error.response.statusText.includes("password must NOT")) {
+                setErrorMessage("Password must not have fewer than 6 characters.");
+            } else if (error.response.statusText.includes("Email already in")) {
+                setErrorMessage("Email is already in use.");
+            } else {
+                setErrorMessage("You typed invalid input. Try again.");
+            }
 
         })
     }
+
+    const loginUser = async () => {
+        const userData: userLogin = {
+            email,
+            password
+        };
+        await axios.post('http://localhost:4941/api/v1/users/login', userData)
+            .then((response) => {
+                setErrorFlag(false);
+                setErrorMessage("");
+                navigate('/user/' + response.data.userId)
+                localStorage.setItem('token', response.data.token);
+                localStorage.setItem('userId', response.data.userId);
+
+            })
+    }
+
+
+
 
     return (
         <div>
@@ -101,7 +131,7 @@ const Register = () => {
                     id="outlined-basic"
                     label="Password"
                     variant="outlined"
-                    type={showPassword ? 'text' : 'password'} // Toggle between text and password
+                    type={showPassword ? 'text' : 'password'}
                     value={password}
                     onChange={setPasswordState}
                     InputProps={{

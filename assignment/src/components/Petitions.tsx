@@ -4,6 +4,7 @@ import {Link} from 'react-router-dom';
 import Petition from './Petition';
 import {DataGrid, GridCellParams, GridColDef, GridRowParams} from '@mui/x-data-grid';
 import Container from '@mui/material/Container';
+import { useLocation } from 'react-router-dom';
 import {
     Box,
     Button,
@@ -52,6 +53,7 @@ const Petitions = () => {
     const categoryNames = categories.map(category => category.name);
     const [maximumCost, setMaximumCost] = React.useState("");
     const [chosenCategoriesId, setChosenCategoriesId] = React.useState<Array<number>>([])
+
 
     const selectingCategories = (event: SelectChangeEvent<typeof categoryName>) => {
         const selectedCategoryNames = event.target.value as string[];

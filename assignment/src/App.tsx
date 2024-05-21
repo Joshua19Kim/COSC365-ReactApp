@@ -12,10 +12,11 @@ function App() {
             <Router>
                 <div>
                     <Routes>
-                        <Route path="/petitions/:id" element={<Petition/>}/>
                         <Route path="/" element={<Petitions/>}/>
-                        <Route path="*" element={<NotFound/>}/>
+                        <Route path="/:id" element={<Petitions/>}/>
+                        <Route path="/petitions/:id" element={<Petition/>}/>
                         <Route path="/user/:id" element={<User/>}/>
+                        <Route path="*" element={<NotFound/>}/>
                     </Routes>
                 </div>
             </Router>

@@ -1,6 +1,6 @@
-import React from "react";
+import React, {useEffect} from "react";
 import axios from "axios";
-import {Link, useNavigate, useParams} from "react-router-dom";
+import {Link, useLocation, useNavigate, useParams} from "react-router-dom";
 import {
     Box, Button,
     Container,
@@ -12,7 +12,7 @@ import {
     TableCell,
     TableContainer,
     TableHead,
-    TableRow
+    TableRow, Typography
 } from "@mui/material";
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import Avatar from "@mui/material/Avatar";
@@ -30,6 +30,7 @@ const Div = styled('div')(({ theme }) => ({
 const Petition = () => {
 
     const {id} = useParams();
+    const location = useLocation();
     const [errorFlag, setErrorFlag] = React.useState(false)
     const [errorMessage, setErrorMessage] = React.useState("")
     const [petition, setPetition]
@@ -64,6 +65,7 @@ const Petition = () => {
             setSimilarPetitions(similar);
         }
     }, [id,petitions]);
+
 
     const getPetition = () => {
         axios.get('http://localhost:4941/api/v1/petitions/' + id)
@@ -184,7 +186,7 @@ const Petition = () => {
                             <Box height={1000} width={800} display="flex" flexDirection="column" alignItems="center" justifyContent="center">
                                 <Box height={1000} width={700} display="flex" flexDirection="row" alignItems="flex-start" justifyContent="flex-start">
 
-                                    <Box height={600} width={400} display="flex" flexDirection="column" alignItems="flex-start" justifyContent="flex-start" marginTop={10}>
+                                    <Box height={600} width={400} display="flex" flexDirection="column" alignItems="flex-start" justifyContent="flex-start" marginTop={5}>
                                         <Box height={300} width={300} display="flex" alignItems="center" justifyContent="center" p={1} sx={{ border: '0.2px solid grey' }}>
                                             {petitionImage ? (
                                                 <img
@@ -208,12 +210,26 @@ const Petition = () => {
                                     <Box height={200} width={300} display="flex" marginRight="20px" flexDirection="column" justifyContent="center" alignItems="center" >
                                         <Box position="absolute" top={10} flexDirection="column" justifyContent="center" alignItems="center" textAlign="center" marginTop={'10px'}>
                                             <Div>No.Supporters</Div>
-                                            <Div>{petition.numberOfSupporters}</Div>
+                                            <Typography
+                                                textAlign="center"
+                                                variant="h6"
+                                                component="h2"
+                                                sx={{ fontSize: '4rem' }}
+                                            >
+                                                {petition.numberOfSupporters}
+                                            </Typography>
                                             <Div>Total money raised</Div>
-                                            <Div>{petition.moneyRaised}</Div>
+                                            <Typography
+                                                textAlign="center"
+                                                variant="h6"
+                                                component="h2"
+                                                sx={{ fontSize: '4rem' }}
+                                            >
+                                                ${petition.moneyRaised}
+                                            </Typography>
 
                                         </Box>
-                                        <Box position="absolute" top={200} flexDirection="column" justifyContent="center" alignItems="center" textAlign="center">
+                                        <Box position="absolute" top={400} flexDirection="column" justifyContent="center" alignItems="center" textAlign="center">
                                             <Div>{"-Description-"}</Div>
                                             <Div>{petition.description}</Div>
                                         </Box>
