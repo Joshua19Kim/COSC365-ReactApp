@@ -43,7 +43,7 @@ const Login: React.FC<LoginProps> = ({ handleCloseModal }) => {
                 setErrorFlag(false);
                 setErrorMessage("");
                 handleCloseModal();
-                navigate('/', { state: { userId: response.data.userId, token: response.data.token } })
+                navigate('/')
                 localStorage.setItem('token', response.data.token);
                 localStorage.setItem('userId', response.data.userId);
                 console.log("FROM Login, token is : "+localStorage.getItem('token'))

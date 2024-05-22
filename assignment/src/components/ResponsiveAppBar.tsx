@@ -32,8 +32,6 @@ const ResponsiveAppBar = () => {
 
         if (localStorage.getItem('token')) {
             setLoggedIn(true);
-            console.log("FROM nav, token is : "+localStorage.getItem('token'))
-            console.log("FROM nav, userId is : "+localStorage.getItem('userId'))
         }
     }, [location]);
 
@@ -188,15 +186,16 @@ const ResponsiveAppBar = () => {
                             >
                                 Petitions
                             </Button>
-                            {/*{loggedIn && (*/}
-                            {/*    <Button*/}
-                            {/*        key="logout"*/}
-                            {/*        onClick={() => { handleCloseNavMenu(); handleLogout(); }}*/}
-                            {/*        sx={{ my: 2, color: 'white', display: 'block' }}*/}
-                            {/*    >*/}
-                            {/*        Logout*/}
-                            {/*    </Button>*/}
-                            {/*)}*/}
+                            {loggedIn && (
+                                <Link to="/createPetition" style={{ textDecoration: 'none', color: 'inherit' }}>
+                                <Button
+                                    key="createPetition"
+                                    sx={{ my: 2, color: 'white', display: 'block'}}
+                                >
+                                    Create petition
+                                </Button>
+                                </Link>
+                            )}
                         </Box>
 
                         <Box sx={{ flexGrow: 0 }}>

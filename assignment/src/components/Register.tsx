@@ -49,29 +49,29 @@ const Register = () => {
             email,
             password
         };
-    await axios.post('http://localhost:4941/api/v1/users/register', userData)
-        .then((response) => {
-            setErrorFlag(false);
-            setErrorMessage("");
-            loginUser();
-        }, (error) => {
-            setErrorFlag(true);
+        await axios.post('http://localhost:4941/api/v1/users/register', userData)
+            .then((response) => {
+                setErrorFlag(false);
+                setErrorMessage("");
+                loginUser();
+            }, (error) => {
+                setErrorFlag(true);
 
-            if (error.response.statusText.includes("firstName must NOT")) {
-                setErrorMessage("First name must not have fewer than 1 characters.");
-            } else if (error.response.statusText.includes("lastName must NOT")) {
-                setErrorMessage("Last name must not have fewer than 1 characters.");
-            } else if (error.response.statusText.includes("data/email")) {
-                setErrorMessage("Email must match the format 'email'.");
-            } else if (error.response.statusText.includes("password must NOT")) {
-                setErrorMessage("Password must not have fewer than 6 characters.");
-            } else if (error.response.statusText.includes("Email already in")) {
-                setErrorMessage("Email is already in use.");
-            } else {
-                setErrorMessage("You typed invalid input. Try again.");
+                if (error.response.statusText.includes("firstName must NOT")) {
+                    setErrorMessage("First name must not have fewer than 1 characters.");
+                } else if (error.response.statusText.includes("lastName must NOT")) {
+                    setErrorMessage("Last name must not have fewer than 1 characters.");
+                } else if (error.response.statusText.includes("data/email")) {
+                    setErrorMessage("Email must match the format 'email'.");
+                } else if (error.response.statusText.includes("password must NOT")) {
+                    setErrorMessage("Password must not have fewer than 6 characters.");
+                } else if (error.response.statusText.includes("Email already in")) {
+                    setErrorMessage("Email is already in use.");
+                } else {
+                    setErrorMessage("You typed invalid input. Try again.");
+                }
             }
-
-        })
+            )
     }
 
     const loginUser = async () => {

@@ -5,6 +5,7 @@ import NotFound from "./components/NotFound";
 import Petition from "./components/Petition";
 import Petitions from "./components/Petitions";
 import User from "./components/User";
+import CreatePetition from "./components/CreatePetition";
 
 function App() {
     return (
@@ -15,6 +16,7 @@ function App() {
                         <Route path="/" element={<Petitions/>}/>
                         <Route path="/:id" element={<Petitions/>}/>
                         <Route path="/petitions/:id" element={<Petition/>}/>
+                        <Route path="/createPetition" element={<CreatePetition/>}/>
                         <Route path="/user/:id" element={<User/>}/>
                         <Route path="*" element={<NotFound/>}/>
                     </Routes>

@@ -10,6 +10,7 @@ type Petition = {
     supportingCost: number,
 }
 type SupportTierPost = {
+    tempId:number
     title: string,
     description: string
     cost: number
@@ -19,15 +20,19 @@ type SupportTier = {
     supportTierId: number,
 } & SupportTierPost
 
+type PetitionCreate = {
+    title: string,
+    description: string,
+    categoryId: number,
+    supportTiers: SupportTierPost[]
+}
+
 type PetitionFull = {
     description: string,
     moneyRaised: number,
     supportTiers: SupportTier[]
 } & Petition
 
-type PetitionWithCategory = Petition & {
-    categoryName: string,
-}
 
 type Category = {
     categoryId: number,
