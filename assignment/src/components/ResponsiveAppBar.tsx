@@ -21,18 +21,24 @@ import axios from 'axios';
 const ResponsiveAppBar = () => {
     const navigate = useNavigate();
     const location = useLocation();
-    const [anchorElNav, setAnchorElNav] = useState<null | HTMLElement>(null);
-    const [anchorElUser, setAnchorElUser] = useState<null | HTMLElement>(null);
-    const [openModal, setOpenModal] = useState(false);
-    const [isLogin, setIsLogin] = useState(true);
-    const [loggedIn, setLoggedIn] = useState(false);
+    const [userId, setUserId] = React.useState<number| null>(null);
+    const [anchorElNav, setAnchorElNav] = React.useState<null | HTMLElement>(null);
+    const [anchorElUser, setAnchorElUser] = React.useState<null | HTMLElement>(null);
+    const [openModal, setOpenModal] = React.useState(false);
+    const [isLogin, setIsLogin] = React.useState(true);
+    const [loggedIn, setLoggedIn] = React.useState(false);
+    const [userImage, setUserImage] = React.useState<string>("");
+
 
 
     useEffect(() => {
-
+        const currentUserId = localStorage.getItem('userId');
         if (localStorage.getItem('token')) {
             setLoggedIn(true);
+            getUserImage();
+            setUserId(Number(currentUserId));
         }
+
     }, [location]);
 
     const handleOpenNavMenu = (event: React.MouseEvent<HTMLElement>) => {
@@ -85,6 +91,24 @@ const ResponsiveAppBar = () => {
         }
     };
 
+    const getUserImage = () => {
+        if (loggedIn) {
+            console.log(localStorage.getItem('userId'));
+            axios.get('http://localhost:4941/api/v1/users/' + localStorage.getItem('userId') + "/image", {
+                headers: {
+                    'X-Authorization': `${localStorage.getItem("token")}`
+                },
+                responseType: 'blob'
+            })
+                .then((response) => {
+                    const imageUrl = URL.createObjectURL(response.data);
+                    setUserImage(imageUrl);
+                }, (error) => {
+                    console.error('No user profile photo for nav bar:', error);
+                })
+        }
+    }
+
     return (
         <>
             <AppBar position="static">
@@ -120,7 +144,11 @@ const ResponsiveAppBar = () => {
                                 onClick={handleOpenNavMenu}
                                 color="inherit"
                             >
-                                <MenuIcon />
+                                {userImage ? (
+                                    <Avatar src={userImage} alt="User Photo" />
+                                ) : (
+                                    <MenuIcon />
+                                )}
                             </IconButton>
                             <Menu
                                 id="menu-appbar"
@@ -214,7 +242,7 @@ const ResponsiveAppBar = () => {
                             {loggedIn && (
                                 <Tooltip title="Open settings">
                                     <IconButton onClick={handleOpenUserMenu} sx={{ p: 0 }}>
-                                        <Avatar alt="Remy Sharp" src="/static/images/avatar/2.jpg" />
+                                        <Avatar alt="User Photo" src={userImage || "/static/images/avatar/2.jpg"} />
                                     </IconButton>
                                 </Tooltip>
                             )}

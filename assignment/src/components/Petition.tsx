@@ -1,11 +1,12 @@
-import React, {useEffect} from "react";
+import React, {useEffect, useState} from "react";
 import axios from "axios";
 import {Link, useLocation, useNavigate, useParams} from "react-router-dom";
 import {
+    Alert,
     Box, Button,
     Container,
-    IconButton,
-    Paper, SelectChangeEvent,
+    IconButton, Modal,
+    Paper, SelectChangeEvent, Stack,
     styled,
     Table,
     TableBody,
@@ -19,6 +20,8 @@ import Avatar from "@mui/material/Avatar";
 import {Simulate} from "react-dom/test-utils";
 import error = Simulate.error;
 import ResponsiveAppBar from "./ResponsiveAppBar";
+import {PhotoCamera} from "@mui/icons-material";
+import ImageNotSupportedIcon from '@mui/icons-material/ImageNotSupported';
 
 
 const Div = styled('div')(({ theme }) => ({
@@ -30,9 +33,11 @@ const Div = styled('div')(({ theme }) => ({
 const Petition = () => {
 
     const {id} = useParams();
-    const location = useLocation();
+    const navigate = useNavigate();
     const [errorFlag, setErrorFlag] = React.useState(false)
     const [errorMessage, setErrorMessage] = React.useState("")
+    const [modalErrorFlag, setModalErrorFlag] = React.useState(false)
+    const [modalErrorMessage, setModalErrorMessage] = React.useState("")
     const [petition, setPetition]
         = React.useState<PetitionFull>({
         petitionId: 0, title: "", categoryId: 0, creationDate: "", ownerId: 0, ownerFirstName: "", ownerLastName: "",
@@ -42,6 +47,9 @@ const Petition = () => {
     const [petitionImage, setPetitionImage] = React.useState<string | null>(null);
     const [petitions, setPetitions] = React.useState<Array<Petition>>([])
     const [supporters, setSupporters] = React.useState<Supporter[]>([])
+    const [isUserTheOwner, setIsUserTheOwner] = React.useState<boolean>(false);
+    const [modalOpen, setModalOpen] = React.useState(false);
+
 
 
 
@@ -55,6 +63,12 @@ const Petition = () => {
     React.useEffect(() => {
         if (petition.categoryId !== 0) {
             getPetitions();
+        }
+        if(localStorage.getItem('userId')) {
+            const currentUserId = Number(localStorage.getItem('userId'));
+            if (currentUserId === petition.ownerId) {
+                setIsUserTheOwner(true);
+            }
         }
     }, [petition]);
 
@@ -145,6 +159,51 @@ const Petition = () => {
             hour12: true,
         });
     }
+
+    const deletePetition = async () => {
+        await axios.delete('http://localhost:4941/api/v1/petitions/'+ petition.petitionId , {
+            headers: {
+                'X-Authorization': `${localStorage.getItem("token")}`
+            }
+        })
+            .then((response) => {
+                    setModalErrorFlag(false);
+                    setModalErrorMessage("");
+                    navigate("/petitions/");
+                }, (error) => {
+                    setModalErrorFlag(true);
+                if (error.response.statusText.includes("Unauthorized" || "Only the owner of")) {
+                    setModalErrorMessage("You are not authorized to delete this petition.");
+                } else if (error.response.statusText.includes("Can not delete a petition with one or")) {
+                    setModalErrorMessage("You cannot delete a petition with one or more supporters");
+                } else if (error.response.statusText.includes("Not Found. No petition")) {
+                    setModalErrorMessage("Cannot find a petition!!");
+                } else if (error.response.statusText.includes("Internal Server Error")) {
+                    setModalErrorMessage("Server Error");
+                } else {
+                    setModalErrorMessage("Failed to delete this petition, ask a Developer.");
+                }
+                }
+            )
+    }
+
+
+    const deleteModalOrAlert = () => {
+
+        // if ( ) {
+        //     return (
+                // <Stack sx={{ width: '100%' }} spacing={2}>
+                //
+                //     <Alert severity="warning">This is a warning Alert.</Alert>
+                // </Stack>
+            // )
+        //
+        // }
+        setModalOpen(true)
+
+    }
+
+
     if (errorFlag) {
         return (
             <div>
@@ -165,23 +224,30 @@ const Petition = () => {
                                 style={{marginRight: '16px'}}>
                         <ArrowBackIcon style={{fontSize: 50}}/>
                     </IconButton>
-                    <h1 style={{flex: 1, textAlign: 'center', fontSize: '40px'}}>{petition.title}</h1>
+                    <h1 style={{flex: 1, textAlign: 'center', fontSize: '40px'}}>
+                        {petition.title}
+                    </h1>
+                    {isUserTheOwner && (
+                        <Box id={"buttons"} sx={{ marginLeft:'50px', marginTop:'20px',display: 'flex', gap: '50px',}}>
+                            <Link to={'/editPetition/'+ petition.petitionId}><Button variant="contained" sx={{ width: '200px', height: '50px' }}>
+                                Edit
+                            </Button></Link>
+                            <Button variant="contained" sx={{ width: '100px', height: '50px', backgroundColor: '#FF0000', '&:hover': {
+                                    backgroundColor: '#8B0000', // Dark red color
+                                }, }} onClick={() => deleteModalOrAlert()}>
+                                Delete
+                            </Button>
+                        </Box>
+
+                    )}
                     <div style={{width: '48px'}}></div>
                 </div>
 
                     <Container style={{
-                        position: 'relative',
-                        height: '1000px',
-                        width: '1800px',
-                        display: 'flex',
-                        maxWidth: '1800px'
+                        position: 'relative', height: '1000px', width: '1800px', display: 'flex', maxWidth: '1800px'
                     }}>
                         <Container style={{
-                            position: 'relative',
-                            height: '1000px',
-                            width: '800px',
-                            display: 'flex',
-                            maxWidth: '800px'
+                            position: 'relative', height: '1000px', width: '800px', display: 'flex', maxWidth: '800px'
                         }}>
                             <Box height={1000} width={800} display="flex" flexDirection="column" alignItems="center" justifyContent="center">
                                 <Box height={1000} width={700} display="flex" flexDirection="row" alignItems="flex-start" justifyContent="flex-start">
@@ -195,7 +261,7 @@ const Petition = () => {
                                                     style={{ maxHeight: '100%', maxWidth: '100%', objectFit: 'contain' }}
                                                 />
                                             ) : (
-                                                <p>Loading image...</p>
+                                                <ImageNotSupportedIcon sx={{fontSize: '150px'}}></ImageNotSupportedIcon>
                                             )}
                                             {errorFlag && <p>Error: {errorMessage}</p>}
                                         </Box>
@@ -210,21 +276,11 @@ const Petition = () => {
                                     <Box height={200} width={300} display="flex" marginRight="20px" flexDirection="column" justifyContent="center" alignItems="center" >
                                         <Box position="absolute" top={10} flexDirection="column" justifyContent="center" alignItems="center" textAlign="center" marginTop={'10px'}>
                                             <Div>No.Supporters</Div>
-                                            <Typography
-                                                textAlign="center"
-                                                variant="h6"
-                                                component="h2"
-                                                sx={{ fontSize: '4rem' }}
-                                            >
+                                            <Typography textAlign="center" variant="h6" component="h2" sx={{ fontSize: '4rem' }}>
                                                 {petition.numberOfSupporters}
                                             </Typography>
                                             <Div>Total money raised</Div>
-                                            <Typography
-                                                textAlign="center"
-                                                variant="h6"
-                                                component="h2"
-                                                sx={{ fontSize: '4rem' }}
-                                            >
+                                            <Typography textAlign="center" variant="h6" component="h2" sx={{ fontSize: '4rem' }}>
                                                 ${petition.moneyRaised}
                                             </Typography>
 
@@ -243,11 +299,7 @@ const Petition = () => {
 
                         <Container
                             style={{
-                                position: 'relative',
-                                height: 800,
-                                width: 930,
-                                display: 'flex',
-                                flexDirection: "column"
+                                position: 'relative', height: 800, width: 930, display: 'flex', flexDirection: "column"
                             }}>
 
                             <Box marginBottom={"20px"}>
@@ -382,8 +434,6 @@ const Petition = () => {
                                                     <TableCell align="right">{formatDate(row.creationDate)}</TableCell>
                                                     <TableCell align="right">${row.supportingCost}</TableCell>
                                                     <TableCell><Link to={"/petitions/" + row.petitionId}> <Button variant="contained">View</Button> </Link></TableCell>
-
-
                                                 </TableRow>
                                             ))}
                                         </TableBody>
@@ -393,7 +443,33 @@ const Petition = () => {
 
                         </Container>
                     </Container>
-
+                <Modal open={modalOpen} onClose={() => setModalOpen(false)}>
+                    <Box sx={{
+                        position: 'absolute', top: '50%', left: '50%',
+                        transform: 'translate(-50%, -50%)', width: 400, height: 200, bgcolor: 'background.paper', border: '2px solid #000', boxShadow: 24, p: 4
+                    }}>
+                        <Typography variant="h6" component="h2" sx={{marginTop:'40px'}}>
+                            Do you really want to delete this petition???
+                        </Typography>
+                        {modalErrorFlag && (
+                            <Typography color="error" sx={{ marginTop: '20px', textAlign:'center'}}>
+                                {modalErrorMessage}
+                            </Typography>
+                        )}
+                        <Box mt={2} display="flex" justifyContent="space-between" sx={{marginTop:'70px'}}>
+                            <Button variant="contained" color="primary" sx={{ width: '200px', height: '50px', backgroundColor: '#FF0000', '&:hover': {
+                                    backgroundColor: '#8B0000', // Dark red color
+                                }, }}
+                                onClick={deletePetition}
+                            >
+                                Delete
+                            </Button>
+                            <Button variant="contained" sx={{ width: '150px', height: '50px' }} onClick={() => setModalOpen(false)}>
+                                Cancel
+                            </Button>
+                        </Box>
+                    </Box>
+                </Modal>
             </div>
         )
     }

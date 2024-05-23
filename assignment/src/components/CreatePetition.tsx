@@ -35,12 +35,13 @@ const CreatePetition: React.FC = () => {
     const [anchorEl, setAnchorEl] = React.useState<null | HTMLElement>(null);
     const [selectedIndexCategory, setSelectedIndex] = React.useState(-1);
     const open = Boolean(anchorEl);
-    const [imageType, setImageType] = React.useState<string|null>(null);
     const [supportTier, setSupportTier] = React.useState<SupportTierPost[]>([{tempId:-1, title:"", description:"", cost:0}])
     const [tempId, setTempId] = React.useState<number>(0);
     const [modalOpen, setModalOpen] = useState(false);
 
-    const [selectedImage, setSelectedImage] = React.useState<string | ArrayBuffer | null>(null);
+    const [imageType, setImageType] = React.useState<string|null>(null);
+    const [selectedImage, setSelectedImage] = React.useState<File | null>(null);
+    const [selectedImagePreview, setSelectedImagePreview] = React.useState<string | null>(null);
 
     useEffect(() => {
         getCategories();
@@ -52,45 +53,22 @@ const CreatePetition: React.FC = () => {
     }, [selectedIndexCategory]);
 
 
-        const handleClickListItem = (event: React.MouseEvent<HTMLElement>) => {
-            setAnchorEl(event.currentTarget);
-        };
+    const handleClickListItem = (event: React.MouseEvent<HTMLElement>) => {
+        setAnchorEl(event.currentTarget);
+    };
 
-        const handleMenuItemClick = (
-            event: React.MouseEvent<HTMLElement>,
-            index: number,
-        ) => {
-            setSelectedIndex(index);
-            setAnchorEl(null);
-        };
+    const handleMenuItemClick = (
+        event: React.MouseEvent<HTMLElement>,
+        index: number,
+    ) => {
+        setSelectedIndex(index);
+        setAnchorEl(null);
+    };
 
-        const handleClose = () => {
-            setAnchorEl(null);
-        };
+    const handleClose = () => {
+        setAnchorEl(null);
+    };
 
-
-        const sendPetitionImage = async () => {
-
-            await axios.put('http://localhost:4941/api/v1/petitions/'+ newPetitionId + '/image', selectedImage, {
-                headers:{
-                    "Content-Type": imageType,
-                    'X-Authorization': `${localStorage.getItem("token")}`
-                }
-            })
-                .then((response) => {
-                        setModalErrorFlag(false);
-                        setModalErrorMessage("");
-                        navigate("/")
-                    }, (error) => {
-                        setModalErrorFlag(true);
-                        setModalErrorMessage("You typed invalid image type. Try again.");
-                        // if (error.response.statusText.includes("data/title must NOT have")) {
-                        //     setErrorMessage("Please enter the title for your petition.");
-                        // }
-                    }
-                )
-
-        }
 
     const createPetition = async () => {
         const petitionData: PetitionCreate = {
@@ -128,10 +106,38 @@ const CreatePetition: React.FC = () => {
             }
         )
     }
-
+    const sendPetitionImage = async () => {
+        if (!selectedImage) {
+            setModalErrorFlag(true);
+            setModalErrorMessage("Please select an image.");
+            return;
+        }
+        await axios.put(`http://localhost:4941/api/v1/petitions/${newPetitionId}/image`, selectedImage, {
+            headers: {
+                'Content-Type': imageType,
+                'X-Authorization': `${localStorage.getItem("token")}`
+            }
+        })
+            .then((response) => {
+                    setModalErrorFlag(false);
+                    setModalErrorMessage("");
+                    navigate("/petitions/" + newPetitionId);
+                }, (error) => {
+                    setModalErrorFlag(true);
+                if (error.response.statusText.includes("Payload Too Large")) {
+                    setModalErrorMessage("Your image size is too big.");
+                } else if (error.response.statusText.includes("photo must be image/jpeg,")) {
+                    setModalErrorMessage("You put invalid image. Please put .jpg, .png or .gif.");
+                } else {
+                    setErrorMessage("You posted the invalid file. Try again.");
+                }
+                }
+            )
+    }
 
     const handleImageChange = (event: ChangeEvent<HTMLInputElement>) => {
         const file = event.target.files?.[0];
+        console.log(file)
         if (file) {
             const allowedTypes = ['image/png', 'image/jpeg', 'image/gif'];
             if (!allowedTypes.includes(file.type)) {
@@ -139,9 +145,12 @@ const CreatePetition: React.FC = () => {
                 return;
             }
             setImageType(file.type);
+            setSelectedImage(file);
+
             const reader = new FileReader();
             reader.onloadend = () => {
-                setSelectedImage(reader.result);
+                const result = reader.result as string;
+                setSelectedImagePreview(result);
             };
             reader.readAsDataURL(file);
         }
@@ -256,13 +265,18 @@ const CreatePetition: React.FC = () => {
 
 
     return (
-
         <div>
             <ResponsiveAppBar/>
-            <h1 style={{fontSize: '40px'}}>Create A Petition</h1>
+        <Container style={{
+            position: 'relative', flexDirection: 'column', justifyContent: 'center', alignItems: 'center',
+            height: 1000, width: 1300, marginTop:50}}>
+
+            <Box sx={{marginBottom:'20px'}}>
+                <h1 style={{fontSize: '40px'}}>Create A Petition</h1>
+            </Box>
             <Container style={{
                 position: 'relative', flexDirection: 'column', justifyContent: 'center', alignItems: 'center',
-                height: 800, width: 1300, marginTop:50}}>
+                height: 800, width: 1300, marginTop:70}}>
                 <Box id={"title&category&desription"} height={500} width={2200} display={"flex"}>
                     <Box id={"title&category&description"} sx={{height:"400px", width:"400px", marginLeft: '40px'}} display="flex" flexDirection="column" justifyContent="center">
                         <Typography textAlign="center" variant="h6" component="h2" sx={{ fontSize: '1rem', textAlign: 'left', marginRight: '8px', marginTop: '20px' }}>
@@ -338,7 +352,7 @@ const CreatePetition: React.FC = () => {
                     transform: 'translate(-50%, -50%)', width: 400, bgcolor: 'background.paper', border: '2px solid #000', boxShadow: 24, p: 4
                 }}>
                     <Typography variant="h6" component="h2">
-                        Upload Image (Optional)
+                        Upload Petition Image (Optional)
                     </Typography>
                     <input
                         accept="image/png, image/jpeg, image/gif"
@@ -352,9 +366,9 @@ const CreatePetition: React.FC = () => {
                             <PhotoCamera />
                         </IconButton>
                     </label>
-                    {selectedImage && (
+                    {selectedImagePreview && (
                         <Box mt={2}>
-                            <img src={selectedImage as string} alt="Selected" style={{ maxWidth: '100%', maxHeight: '200px' }} />
+                            <img src={selectedImagePreview} alt="Selected" style={{ maxWidth: '100%', maxHeight: '200px' }} />
                         </Box>
                     )}
                     <Box mt={2} display="flex" justifyContent="space-between">
@@ -375,6 +389,7 @@ const CreatePetition: React.FC = () => {
 
 
 
+        </Container>
         </div>
 
 

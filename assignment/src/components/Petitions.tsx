@@ -19,6 +19,7 @@ import {
 } from "@mui/material";
 import Avatar from '@mui/material/Avatar';
 import ResponsiveAppBar from './ResponsiveAppBar';
+import ImageNotSupportedIcon from "@mui/icons-material/ImageNotSupported";
 
 const Div = styled('div')(({ theme }) => ({
     ...theme.typography.button,
@@ -26,12 +27,6 @@ const Div = styled('div')(({ theme }) => ({
     padding: theme.spacing(1),
 }));
 
-const ClearButton = styled(IconButton)(({ theme }) => ({
-    position: 'absolute',
-    right: -40,
-    top: '50%',
-    transform: 'translateY(-50%)',
-}));
 function getStyles(name: string, personName: string[], theme: Theme) {
     return {
         fontWeight:
@@ -40,6 +35,29 @@ function getStyles(name: string, personName: string[], theme: Theme) {
                 : theme.typography.fontWeightMedium,
     };
 }
+
+const PetitionImageCell = ({ petitionId }: any) => {
+    const [imageError, setImageError] = React.useState(false);
+
+    const handleImageError = () => {
+        setImageError(true);
+    };
+
+    return (
+        <>
+            {imageError ? (
+                <ImageNotSupportedIcon sx={{ fontSize: '25px' }} />
+            ) : (
+                <img
+                    src={`http://localhost:4941/api/v1/petitions/${petitionId}/image`}
+                    alt="Petition Image"
+                    onError={handleImageError}
+                    style={{ maxWidth: '100%', height: 'auto' }}
+                />
+            )}
+        </>
+    );
+};
 
 const Petitions = () => {
     const [petitions, setPetitions] = React.useState<Array<Petition>>([])
@@ -70,226 +88,227 @@ const Petitions = () => {
 
         }
 
-    React.useEffect(() => {
-        getPetitions()
-        getCategories()
-    }, [chosenCategoriesId, maximumCost, categoryName])
+        React.useEffect(() => {
 
-    const getCategories = () => {
-    axios.get('http://localhost:4941/api/v1/petitions/categories')
-        .then((response) => {
-            setErrorFlag(false)
-            setErrorMessage("")
-            setCategories(response.data)
-        }, (error) => {
-            setErrorFlag(true)
-            setErrorMessage(error.toString())
-        })
-    }
+            getPetitions()
+            getCategories()
+        }, [chosenCategoriesId, maximumCost, categoryName])
 
-    const getPetitions = () => {
-        let basicURL = 'http://localhost:4941/api/v1/petitions';
-        let queryForm = "";
-        let supportCostForm = "";
-        let categoryForm = "";
-        if (query.length !== 0) { queryForm = 'q='+query}
-
-        if ( maximumCost !== ""  && query.length === 0) {
-            supportCostForm = 'supportingCost='+ maximumCost;
-        } else if (maximumCost !== "" && query.length !== 0) {
-            supportCostForm = '&supportingCost='+ maximumCost;
-        }
-
-        if (chosenCategoriesId.length ===1) {
-            categoryForm = '&categoryIds=' + chosenCategoriesId[0];
-        } else if (chosenCategoriesId.length !== 0) {
-            categoryForm = chosenCategoriesId.map(id => `&categoryIds=${id}`).join('&');
-        }
-
-        if (queryForm.length !== 0 || supportCostForm.length !== 0 || categoryForm.length !==0) {
-            basicURL += "?";
-        }
-        axios.get(basicURL + queryForm + supportCostForm + categoryForm)
+        const getCategories = () => {
+        axios.get('http://localhost:4941/api/v1/petitions/categories')
             .then((response) => {
                 setErrorFlag(false)
                 setErrorMessage("")
-                setPetitions(response.data.petitions)
+                setCategories(response.data)
             }, (error) => {
                 setErrorFlag(true)
                 setErrorMessage(error.toString())
             })
-    }
-
-    const checkMinimumCostState = (event:ChangeEvent<HTMLInputElement>) => {
-        setMaximumCost(!isNaN(Number(event.target.value)) ? event.target.value : "");
-    }
-    const searchPetitionState = (event:ChangeEvent<HTMLInputElement>) => {
-        setQuery(event.target.value)
-    }
-    const handleSearchClick = () => {
-        getPetitions()
-
-    }
-    const handleKeyPressEnter = (event: any) => {
-        if (event.key === 'Enter') {
-            handleSearchClick();
         }
-    };
 
-    const formatDate = (date : string) => {
-        const formattedDate = new Date(date);
-        return formattedDate.toLocaleString('en-NZ', {
-            timeZone: 'Pacific/Auckland',
-            day: '2-digit',
-            month: 'short',
-            year: 'numeric',
-            hour: '2-digit',
-            minute: '2-digit',
-            hour12: true,
-        });
-    }
+        const getPetitions = () => {
+            let basicURL = 'http://localhost:4941/api/v1/petitions';
+            let queryForm = "";
+            let supportCostForm = "";
+            let categoryForm = "";
+            if (query.length !== 0) { queryForm = 'q='+query}
 
-    const columns: GridColDef[] = [
-        { field: 'petitionImage', headerName: 'Petition Image', headerAlign: 'center', width: 130, sortable: false, filterable:false,
-            align: 'center', renderCell: (aparams: GridCellParams) => {
-                const petitionId = aparams.row.petitionId as number;
-                return <img src={'http://localhost:4941/api/v1/petitions/' + petitionId + "/image"}
-                            alt="Petition Image"
-                            style={{ maxWidth: '100%', height: 'auto' }}
-                />;
-            }},
-        { field: 'title', headerName: 'Title',headerAlign: 'center', width: 310, align: 'center', filterable:false,},
-        { field: 'categories', headerName: 'Category',headerAlign: 'center', width: 210, align: 'center', filterable:false, sortable: false,
-            renderCell: (params: GridCellParams) => {
-                const categoryId = params.row.categoryId as number;
-                const category = categories.find(cat => cat.categoryId === categoryId);
-                return <span>{category ? category.name : 'Unknown'}</span>
-            }},
-        {field: 'ownerFullName', headerName: 'Owner Name', headerAlign: 'center', width: 200, align: 'center', filterable:false, sortable: false,
-            renderCell: (params: GridCellParams) => {
-                const { ownerFirstName, ownerLastName } = params.row;
-                return <span>{ownerFirstName} {ownerLastName}</span>;
-        }},
-        { field: 'userImage', headerName: 'Owner Image',headerAlign: 'center', width: 130, sortable: false, filterable:false,
-            align: 'center', renderCell: (params: GridCellParams) => {
-                const userId = params.row.ownerId as number;
-                return <Avatar style={{ marginTop: 4, width: 100, height: 100, borderRadius: '50%', overflow: 'hidden', justifyContent: "center", alignContent:"center"}}
-                    src={'http://localhost:4941/api/v1/users/' + userId + "/image"} />
-
-            }},
-
-        { field: 'creationDate', headerName: 'Creation Date',headerAlign: 'center', width: 180, align: 'center', filterable:false,
-            renderCell: (params: GridCellParams) => {
-                const creationDate = formatDate(params.row.creationDate)
-                return <span>{creationDate}</span>;
+            if ( maximumCost !== ""  && query.length === 0) {
+                supportCostForm = 'supportingCost='+ maximumCost;
+            } else if (maximumCost !== "" && query.length !== 0) {
+                supportCostForm = '&supportingCost='+ maximumCost;
             }
-        },
-        { field: 'supportingCost', headerName: 'Supporting Cost',headerAlign: 'center', width: 130, align: 'center', filterable:false,},
-        { field: 'view', headerName: 'View Details', headerAlign: 'center', width: 100, align: 'center', filterable:false, sortable:false,
-            renderCell: (params: GridCellParams) => {
-            const petitionId = params.row.petitionId as number;
-                return <Link to={"/petitions/" + petitionId}> <Button variant="contained">View</Button> </Link>
+
+            if (chosenCategoriesId.length ===1) {
+                categoryForm = '&categoryIds=' + chosenCategoriesId[0];
+            } else if (chosenCategoriesId.length !== 0) {
+                categoryForm = chosenCategoriesId.map(id => `&categoryIds=${id}`).join('&');
             }
-        },
+
+            if (queryForm.length !== 0 || supportCostForm.length !== 0 || categoryForm.length !==0) {
+                basicURL += "?";
+            }
+            axios.get(basicURL + queryForm + supportCostForm + categoryForm)
+                .then((response) => {
+                    setErrorFlag(false)
+                    setErrorMessage("")
+                    setPetitions(response.data.petitions)
+                }, (error) => {
+                    setErrorFlag(true)
+                    setErrorMessage(error.toString())
+                })
+            }
+
+            const checkMinimumCostState = (event:ChangeEvent<HTMLInputElement>) => {
+                setMaximumCost(!isNaN(Number(event.target.value)) ? event.target.value : "");
+            }
+            const searchPetitionState = (event:ChangeEvent<HTMLInputElement>) => {
+                setQuery(event.target.value)
+            }
+            const handleSearchClick = () => {
+                getPetitions()
+
+            }
+            const handleKeyPressEnter = (event: any) => {
+                if (event.key === 'Enter') {
+                    handleSearchClick();
+                }
+            };
 
 
-    ];
-    const getRowId = (row:Petition) => row.petitionId;
+
+            const formatDate = (date : string) => {
+                const formattedDate = new Date(date);
+                return formattedDate.toLocaleString('en-NZ', {
+                    timeZone: 'Pacific/Auckland',
+                    day: '2-digit',
+                    month: 'short',
+                    year: 'numeric',
+                    hour: '2-digit',
+                    minute: '2-digit',
+                    hour12: true,
+                });
+            }
+
+            const columns: GridColDef[] = [
+                { field: 'petitionImage', headerName: 'Petition Image', headerAlign: 'center', width: 130, sortable: false, filterable:false,
+                    align: 'center', renderCell: (params: GridCellParams) => {
+                        const petitionId = params.row.petitionId as number;
+                        return <PetitionImageCell petitionId={petitionId} />;
+                    },
+                },
+                { field: 'title', headerName: 'Title',headerAlign: 'center', width: 310, align: 'center', filterable:false,},
+                { field: 'categories', headerName: 'Category',headerAlign: 'center', width: 210, align: 'center', filterable:false, sortable: false,
+                    renderCell: (params: GridCellParams) => {
+                        const categoryId = params.row.categoryId as number;
+                        const category = categories.find(cat => cat.categoryId === categoryId);
+                        return <span>{category ? category.name : 'Unknown'}</span>
+                    }},
+                {field: 'ownerFullName', headerName: 'Owner Name', headerAlign: 'center', width: 200, align: 'center', filterable:false, sortable: false,
+                    renderCell: (params: GridCellParams) => {
+                        const { ownerFirstName, ownerLastName } = params.row;
+                        return <span>{ownerFirstName} {ownerLastName}</span>;
+                }},
+                { field: 'userImage', headerName: 'Owner Image',headerAlign: 'center', width: 130, sortable: false, filterable:false,
+                    align: 'center', renderCell: (params: GridCellParams) => {
+                        const userId = params.row.ownerId as number;
+                        return <Avatar style={{ marginTop: 4, width: 100, height: 100, borderRadius: '50%', overflow: 'hidden', justifyContent: "center", alignContent:"center"}}
+                            src={'http://localhost:4941/api/v1/users/' + userId + "/image"} />
+
+                    }},
+
+                { field: 'creationDate', headerName: 'Creation Date',headerAlign: 'center', width: 180, align: 'center', filterable:false,
+                    renderCell: (params: GridCellParams) => {
+                        const creationDate = formatDate(params.row.creationDate)
+                        return <span>{creationDate}</span>;
+                    }
+                },
+                { field: 'supportingCost', headerName: 'Supporting Cost',headerAlign: 'center', width: 130, align: 'center', filterable:false,},
+                { field: 'view', headerName: 'View Details', headerAlign: 'center', width: 100, align: 'center', filterable:false, sortable:false,
+                    renderCell: (params: GridCellParams) => {
+                    const petitionId = params.row.petitionId as number;
+                        return <Link to={"/petitions/" + petitionId}> <Button variant="contained">View</Button> </Link>
+                    }
+                },
 
 
-    if (errorFlag) {
-        return (
-            <div>
-                <h1>Petitions</h1>
-                <div style={{color: "red"}}>
-                    {errorMessage}
-                </div>
-            </div>
-        )}
-    else
-        {
-            return (
+            ];
+            const getRowId = (row:Petition) => row.petitionId;
 
-                <div>
-                    <ResponsiveAppBar />
-                    <h1 style={{fontSize: '40px'}}>Petitions</h1>
-                    <Container style={{
-                        position: 'relative',
-                        flexDirection: 'column',
-                        justifyContent: 'center',
-                        alignItems: 'center',
-                        height: 100,
-                        marginLeft:200,
 
-                    }}>
-                        <Box style={{display: 'flex', alignItems: 'center', width: 1400}}>
-                            <TextField style={{height: 55, width: '80%'}}
-                                       id="outlined-basic" label="Search Petition" variant="outlined"
-                                       value={query} onChange={searchPetitionState} onKeyPress={handleKeyPressEnter}/>
-                            <Button style={{height: 55, width: '20%', fontSize: '1.5rem'}} variant="contained"
-                                    onClick={handleSearchClick}>Search</Button>
+            if (errorFlag) {
+                return (
+                    <div>
+                        <h1>Petitions</h1>
+                        <div style={{color: "red"}}>
+                            {errorMessage}
+                        </div>
+                    </div>
+                )}
+            else
+                {
+                    return (
 
-                        </Box>
-                        <Box style={{display: 'flex', alignItems: 'center', width: 1400}}>
-                                <FormControl sx={{m: 1, width: '80%'}}>
-                                    <InputLabel id="demo-multiple-name-label">Category</InputLabel>
-                                    <Select
-                                        labelId="demo-multiple-name-label"
-                                        id="demo-multiple-name"
-                                        multiple
-                                        value={categoryName}
-                                        onChange={selectingCategories}
-                                        input={<OutlinedInput style={{textAlign: "left"}} label="Name"/>}
-                                        MenuProps={{
-                                            PaperProps: {
-                                                style: {
-                                                    maxHeight: 48 * 4.5 + 8,
-                                                    width: 250,
-                                                },
+                        <div>
+                            <ResponsiveAppBar />
+                            <h1 style={{fontSize: '40px'}}>Petitions</h1>
+                            <Container style={{
+                                position: 'relative',
+                                flexDirection: 'column',
+                                justifyContent: 'center',
+                                alignItems: 'center',
+                                height: 100,
+                                marginLeft:200,
+
+                            }}>
+                                <Box style={{display: 'flex', alignItems: 'center', width: 1400}}>
+                                    <TextField style={{height: 55, width: '80%'}}
+                                               id="outlined-basic" label="Search Petition" variant="outlined"
+                                               value={query} onChange={searchPetitionState} onKeyPress={handleKeyPressEnter}/>
+                                    <Button style={{height: 55, width: '20%', fontSize: '1.5rem'}} variant="contained"
+                                            onClick={handleSearchClick}>Search</Button>
+
+                                </Box>
+                                <Box style={{display: 'flex', alignItems: 'center', width: 1400}}>
+                                        <FormControl sx={{m: 1, width: '80%'}}>
+                                            <InputLabel id="demo-multiple-name-label">Category</InputLabel>
+                                            <Select
+                                                labelId="demo-multiple-name-label"
+                                                id="demo-multiple-name"
+                                                multiple
+                                                value={categoryName}
+                                                onChange={selectingCategories}
+                                                input={<OutlinedInput style={{textAlign: "left"}} label="Name"/>}
+                                                MenuProps={{
+                                                    PaperProps: {
+                                                        style: {
+                                                            maxHeight: 48 * 4.5 + 8,
+                                                            width: 250,
+                                                        },
+                                                    },
+                                                }}
+                                            >
+                                                {categoryNames.map((name) => (
+                                                    <MenuItem
+                                                        key={name}
+                                                        value={name}
+                                                        style={getStyles(name, categoryName, theme)}
+                                                    >
+                                                        {name}
+                                                    </MenuItem>
+                                                ))}
+                                            </Select>
+                                        </FormControl>
+                                        <FormControl sx={{m: 1, width: '20%'}}>
+                                            <TextField id="outlined-basic" label="Maximum Cost" variant="outlined"
+                                                       value={maximumCost} onChange={checkMinimumCostState}
+                                                       onKeyPress={handleKeyPressEnter}/>
+                                        </FormControl>
+
+                                </Box>
+                                <Div style={{color:'blue'}}>Click the column name to sort</Div>
+                                <Box style={{ height: 715, width: 1400}}>
+                                    <DataGrid
+                                        rows={petitions}
+                                        getRowId={getRowId}
+                                        rowHeight={110}
+                                        style={{alignContent: "center", justifyContent: "center",}}
+                                        columns={columns}
+                                        initialState={{
+                                            pagination: {
+                                                paginationModel: {page: 0, pageSize: 5},
                                             },
                                         }}
-                                    >
-                                        {categoryNames.map((name) => (
-                                            <MenuItem
-                                                key={name}
-                                                value={name}
-                                                style={getStyles(name, categoryName, theme)}
-                                            >
-                                                {name}
-                                            </MenuItem>
-                                        ))}
-                                    </Select>
-                                </FormControl>
-                                <FormControl sx={{m: 1, width: '20%'}}>
-                                    <TextField id="outlined-basic" label="Maximum Cost" variant="outlined"
-                                               value={maximumCost} onChange={checkMinimumCostState}
-                                               onKeyPress={handleKeyPressEnter}/>
-                                </FormControl>
+                                        pageSizeOptions={[5, 6, 7, 8, 9, 10]}
+                                    />
 
-                        </Box>
-                        <Div style={{color:'blue'}}>Click the column name to sort</Div>
-                        <Box style={{ height: 715, width: 1400}}>
-                            <DataGrid
-                                rows={petitions}
-                                getRowId={getRowId}
-                                rowHeight={110}
-                                style={{alignContent: "center", justifyContent: "center",}}
-                                columns={columns}
-                                initialState={{
-                                    pagination: {
-                                        paginationModel: {page: 0, pageSize: 5},
-                                    },
-                                }}
-                                pageSizeOptions={[5, 6, 7, 8, 9, 10]}
-                            />
-
-                        </Box>
-                    </Container>
-                </div>
+                                </Box>
+                            </Container>
+                        </div>
 
 
-            )
-        }
+                    )
+                }
 
 }
 

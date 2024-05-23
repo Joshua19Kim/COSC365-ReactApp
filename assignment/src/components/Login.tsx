@@ -53,11 +53,11 @@ const Login: React.FC<LoginProps> = ({ handleCloseModal }) => {
                 setErrorFlag(true);
 
                 if (error.response.statusText.includes("data/email")) {
-                    setErrorMessage("Email must match the format 'email'.");
+                    setErrorMessage("Email is not registered.");
                 } else if (error.response.statusText.includes("password must NOT")) {
-                    setErrorMessage("Password must not have fewer than 6 characters.");
+                    setErrorMessage("Password is not correct.");
                 } else {
-                    setErrorMessage("You typed invalid input. Try again.");
+                    setErrorMessage("You typed invalid information. Try again.");
                 }
 
             })
