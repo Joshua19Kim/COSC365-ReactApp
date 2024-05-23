@@ -5,11 +5,12 @@ import {
 } from "@mui/material";
 import {PhotoCamera} from "@mui/icons-material";
 import axios from "axios";
-import {Link, useLocation, useNavigate} from "react-router-dom";
+import {Link, useLocation, useNavigate, useParams} from "react-router-dom";
 
 
 const EditPetition: React.FC = () => {
 
+    const {id} = useParams();
     const navigate = useNavigate();
     const location = useLocation();
     const [errorFlag, setErrorFlag] = React.useState(false)
@@ -33,6 +34,24 @@ const EditPetition: React.FC = () => {
     const [imageType, setImageType] = React.useState<string|null>(null);
     const [selectedImage, setSelectedImage] = React.useState<File | null>(null);
     const [selectedImagePreview, setSelectedImagePreview] = React.useState<string | null>(null);
+
+    const [petition, setPetition]
+        = React.useState<PetitionFull>({
+        petitionId: 0, title: "", categoryId: 0, creationDate: "", ownerId: 0, ownerFirstName: "", ownerLastName: "",
+        numberOfSupporters: 0, supportingCost:0, description: "", moneyRaised: 0, supportTiers: []})
+
+    const getPetition = () => {
+        axios.get('http://localhost:4941/api/v1/petitions/' + id)
+            .then((response) => {
+                setErrorFlag(false)
+                setErrorMessage("")
+                setPetition(response.data)
+            }, (error) => {
+                setErrorFlag(true)
+                setErrorMessage(error.toString())
+            })
+    }
+
 
     useEffect(() => {
         getCategories();
@@ -59,6 +78,7 @@ const EditPetition: React.FC = () => {
     const handleClose = () => {
         setAnchorEl(null);
     };
+
 
 
 
@@ -265,7 +285,7 @@ const EditPetition: React.FC = () => {
                 height: 1000, width: 1300, marginTop:50}}>
 
                 <Box sx={{marginBottom:'20px'}}>
-                    <h1 style={{fontSize: '40px'}}>Create A Petition</h1>
+                    <h1 style={{fontSize: '40px'}}>Edit </h1>
                 </Box>
                 <Container style={{
                     position: 'relative', flexDirection: 'column', justifyContent: 'center', alignItems: 'center',

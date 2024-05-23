@@ -10,6 +10,11 @@ type userLogin = {
     password: string
 }
 
+type loggedInUser = {
+    userId: number,
+    token: string,
+}
+
 type user = {
     id: number,
     firstName: string,
@@ -18,4 +23,9 @@ type user = {
     password: string,
     imageFilename: string,
     authToken: string
+}
+type userDetail = {
+    firstName: string,
+    lastName: string,
+    email: string,
 }

@@ -187,23 +187,6 @@ const Petition = () => {
             )
     }
 
-
-    const deleteModalOrAlert = () => {
-
-        // if ( ) {
-        //     return (
-                // <Stack sx={{ width: '100%' }} spacing={2}>
-                //
-                //     <Alert severity="warning">This is a warning Alert.</Alert>
-                // </Stack>
-            // )
-        //
-        // }
-        setModalOpen(true)
-
-    }
-
-
     if (errorFlag) {
         return (
             <div>
@@ -234,7 +217,7 @@ const Petition = () => {
                             </Button></Link>
                             <Button variant="contained" sx={{ width: '100px', height: '50px', backgroundColor: '#FF0000', '&:hover': {
                                     backgroundColor: '#8B0000', // Dark red color
-                                }, }} onClick={() => deleteModalOrAlert()}>
+                                }, }} onClick={() => setModalOpen(true)}>
                                 Delete
                             </Button>
                         </Box>

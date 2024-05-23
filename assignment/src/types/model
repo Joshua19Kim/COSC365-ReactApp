@@ -448,3 +448,74 @@ const CreatePetition: React.FC = () => {
 };
 
 export default CreatePetition;
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<Modal open={modalOpen} onClose={() => setModalOpen(false)}>
+                    <Box sx={{
+                        position: 'absolute', top: '50%', left: '50%',
+                        transform: 'translate(-50%, -50%)', width: 400, height: 200, bgcolor: 'background.paper', border: '2px solid #000', boxShadow: 24, p: 4
+                    }}>
+                        <Typography variant="h6" component="h2" sx={{marginTop:'40px'}}>
+                            Do you really want to delete this petition???
+                        </Typography>
+                        {modalErrorFlag && (
+                            <Typography color="error" sx={{ marginTop: '20px', textAlign:'center'}}>
+                                {modalErrorMessage}
+                            </Typography>
+                        )}
+                        <Box mt={2} display="flex" justifyContent="space-between" sx={{marginTop:'70px'}}>
+                            <Button variant="contained" color="primary" sx={{ width: '200px', height: '50px', backgroundColor: '#FF0000', '&:hover': {
+                                    backgroundColor: '#8B0000', // Dark red color
+                                }, }}
+                                onClick={deletePetition}
+                            >
+                                Delete
+                            </Button>
+                            <Button variant="contained" sx={{ width: '150px', height: '50px' }} onClick={() => setModalOpen(false)}>
+                                Cancel
+                            </Button>
+                        </Box>
+                    </Box>
+                </Modal>
+
+
+

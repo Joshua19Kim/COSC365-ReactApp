@@ -115,7 +115,6 @@ const Register = () => {
                     setModalErrorMessage("");
                     setModalOpen(false);
                     navigate('/user/' + newUserId)
-                    navigate('/' + newUserId)
                 }, (error) => {
                     setModalErrorFlag(true);
                     if (error.response.statusText.includes("Payload Too Large")) {
@@ -163,33 +162,17 @@ const Register = () => {
                 Register
             </Typography>
 
-            <Box height={700} width={400} display="flex" flexDirection="column" justifyContent="center">
-                <Typography textAlign="center" variant="h6" component="h2" sx={{ fontSize: '1rem', textAlign: 'left', marginRight: '8px', marginTop: '20px' }}>
-                    First Name:
-                </Typography>
-                <TextField id="outlined-basic" label="First Name" variant="outlined"
+            <Box height={500} width={400} display="flex" flexDirection="column" justifyContent="center">
+                <TextField id="outlined-basic" label="First Name" variant="outlined" sx={{ marginTop: '20px'}}
                            value={firstName} onChange={setFirstNameState} />
-
-                <Typography textAlign="center" variant="h6" component="h2" sx={{ fontSize: '1rem', textAlign: 'left', marginRight: '8px', marginTop: '20px' }}>
-                    Last Name:
-                </Typography>
-                <TextField id="outlined-basic" label="Last Name" variant="outlined"
+                <TextField id="outlined-basic" label="Last Name" variant="outlined" sx={{ marginTop: '20px'}}
                            value={lastName} onChange={setLastNameState} />
-
-                <Typography textAlign="center" variant="h6" component="h2" sx={{ fontSize: '1rem', textAlign: 'left', marginRight: '8px', marginTop: '20px' }}>
-                    Email:
-                </Typography>
-                <TextField id="outlined-basic" label="Email" variant="outlined"
+                <TextField id="outlined-basic" label="Email" variant="outlined" sx={{ marginTop: '20px'}}
                            value={email} onChange={setEmailState} />
-
-                <Typography textAlign="center" variant="h6" component="h2" sx={{
-                    fontSize: '1rem', textAlign: 'left', marginRight: '8px', marginTop: '20px' }}>
-                    Password:
-                </Typography>
                 <TextField
                     id="outlined-basic"
                     label="Password"
-                    variant="outlined"
+                    variant="outlined" sx={{ marginTop: '20px'}}
                     type={showPassword ? 'text' : 'password'}
                     value={password}
                     onChange={setPasswordState}

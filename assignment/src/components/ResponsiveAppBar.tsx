@@ -27,7 +27,6 @@ const ResponsiveAppBar = () => {
     const [openModal, setOpenModal] = React.useState(false);
     const [isLogin, setIsLogin] = React.useState(true);
     const [loggedIn, setLoggedIn] = React.useState(false);
-    const [userImage, setUserImage] = React.useState<string>("");
 
 
 
@@ -35,7 +34,6 @@ const ResponsiveAppBar = () => {
         const currentUserId = localStorage.getItem('userId');
         if (localStorage.getItem('token')) {
             setLoggedIn(true);
-            getUserImage();
             setUserId(Number(currentUserId));
         }
 
@@ -91,23 +89,6 @@ const ResponsiveAppBar = () => {
         }
     };
 
-    const getUserImage = () => {
-        if (loggedIn) {
-            console.log(localStorage.getItem('userId'));
-            axios.get('http://localhost:4941/api/v1/users/' + localStorage.getItem('userId') + "/image", {
-                headers: {
-                    'X-Authorization': `${localStorage.getItem("token")}`
-                },
-                responseType: 'blob'
-            })
-                .then((response) => {
-                    const imageUrl = URL.createObjectURL(response.data);
-                    setUserImage(imageUrl);
-                }, (error) => {
-                    console.error('No user profile photo for nav bar:', error);
-                })
-        }
-    }
 
     return (
         <>
@@ -134,76 +115,6 @@ const ResponsiveAppBar = () => {
                                 SENG365
                             </Link>
                         </Typography>
-
-                        <Box sx={{ flexGrow: 1, display: { xs: 'flex', md: 'none' } }}>
-                            <IconButton
-                                size="large"
-                                aria-label="account of current user"
-                                aria-controls="menu-appbar"
-                                aria-haspopup="true"
-                                onClick={handleOpenNavMenu}
-                                color="inherit"
-                            >
-                                {userImage ? (
-                                    <Avatar src={userImage} alt="User Photo" />
-                                ) : (
-                                    <MenuIcon />
-                                )}
-                            </IconButton>
-                            <Menu
-                                id="menu-appbar"
-                                anchorEl={anchorElNav}
-                                anchorOrigin={{
-                                    vertical: 'bottom',
-                                    horizontal: 'left',
-                                }}
-                                keepMounted
-                                transformOrigin={{
-                                    vertical: 'top',
-                                    horizontal: 'left',
-                                }}
-                                open={Boolean(anchorElNav)}
-                                onClose={handleCloseNavMenu}
-                                sx={{
-                                    display: { xs: 'block', md: 'none' },
-                                }}
-                            >
-                                {loggedIn && (
-                                    <MenuItem key="user" onClick={handleCloseNavMenu}>
-                                        <Typography textAlign="center" component={Link} to="/" sx={{ textDecoration: 'none', color: 'inherit' }}>
-                                            User
-                                        </Typography>
-                                    </MenuItem>
-                                )}
-                                {loggedIn && (
-                                    <MenuItem key="logout" onClick={() => { handleCloseNavMenu(); handleLogout(); }}>
-                                        <Typography textAlign="center" sx={{ textDecoration: 'none', color: 'inherit' }}>
-                                            Logout
-                                        </Typography>
-                                    </MenuItem>
-                                )}
-                            </Menu>
-                        </Box>
-
-                        <Typography
-                            variant="h5"
-                            noWrap
-                            component="a"
-                            href="#"
-                            sx={{
-                                mr: 2,
-                                display: { xs: 'flex', md: 'none' },
-                                flexGrow: 1,
-                                fontFamily: 'monospace',
-                                fontWeight: 700,
-                                letterSpacing: '.3rem',
-                                color: 'inherit',
-                                textDecoration: 'none',
-                            }}
-                        >
-                            LOGO
-                        </Typography>
-
                         <Box sx={{ flexGrow: 1, display: { xs: 'none', md: 'flex' } }}>
                             <Button
                                 key="user"
@@ -218,9 +129,9 @@ const ResponsiveAppBar = () => {
                                 <Link to="/createPetition" style={{ textDecoration: 'none', color: 'inherit' }}>
                                 <Button
                                     key="createPetition"
-                                    sx={{ my: 2, color: 'white', display: 'block'}}
+                                    sx={{ my: 2, color: 'white', display: 'block', marginLeft:'30px'}}
                                 >
-                                    Create petition
+                                    Create New Petition
                                 </Button>
                                 </Link>
                             )}
@@ -242,7 +153,7 @@ const ResponsiveAppBar = () => {
                             {loggedIn && (
                                 <Tooltip title="Open settings">
                                     <IconButton onClick={handleOpenUserMenu} sx={{ p: 0 }}>
-                                        <Avatar alt="User Photo" src={userImage || "/static/images/avatar/2.jpg"} />
+                                        <Avatar alt="User Photo" src={'http://localhost:4941/api/v1/users/' + userId + "/image"} />
                                     </IconButton>
                                 </Tooltip>
                             )}
@@ -264,7 +175,7 @@ const ResponsiveAppBar = () => {
                             >
                                 {loggedIn && (
                                     <MenuItem key="user" onClick={handleCloseUserMenu}>
-                                        <Typography textAlign="center" component={Link} to="/" sx={{ textDecoration: 'none', color: 'inherit' }}>
+                                        <Typography textAlign="center" component={Link} to={"/user/"+userId} sx={{ textDecoration: 'none', color: 'inherit' }}>
                                             User
                                         </Typography>
                                     </MenuItem>

@@ -35,7 +35,7 @@ const CreatePetition: React.FC = () => {
     const [anchorEl, setAnchorEl] = React.useState<null | HTMLElement>(null);
     const [selectedIndexCategory, setSelectedIndex] = React.useState(-1);
     const open = Boolean(anchorEl);
-    const [supportTier, setSupportTier] = React.useState<SupportTierPost[]>([{tempId:-1, title:"", description:"", cost:0}])
+    const [supportTiers, setSupportTiers] = React.useState<SupportTierPost[]>([{tempId:-1, title:"", description:"", cost:0}])
     const [tempId, setTempId] = React.useState<number>(0);
     const [modalOpen, setModalOpen] = useState(false);
 
@@ -71,13 +71,23 @@ const CreatePetition: React.FC = () => {
 
 
     const createPetition = async () => {
+        for(let supportier of supportTiers ) {
+            if (isNaN(Number(supportier.cost))) {
+                setErrorFlag(true);
+                setErrorMessage("Support Tier's cost has to be integer.");
+                return
+            } else {
+                supportier.cost = Number(supportier.cost)
+            }
+        }
+
+
         const petitionData: PetitionCreate = {
             title: title,
             description: description,
             categoryId: chosenCategoryId,
-            supportTiers: supportTier
+            supportTiers: supportTiers
         };
-
         await axios.post('http://localhost:4941/api/v1/petitions', petitionData, {
             headers: {'X-Authorization': `${localStorage.getItem("token")}`}
         })
@@ -169,19 +179,19 @@ const CreatePetition: React.FC = () => {
     }
 
     const addSupportTiersSlot = () => {
-        if(supportTier.length < 3) {
+        if(supportTiers.length < 3) {
             setTempId((prevId) => prevId + 1);
-            setSupportTier([...supportTier, {tempId: tempId, title: "", description: "", cost: 0}])
+            setSupportTiers([...supportTiers, {tempId: tempId, title: "", description: "", cost: 0}])
         }
     }
     const deleteSupportTiersSlot = (id:number) => {
-        const updatedSupporttiers = supportTier.filter(tier => tier.tempId !== id);
-        setSupportTier(updatedSupporttiers);
+        const updatedSupporttiers = supportTiers.filter(tier => tier.tempId !== id);
+        setSupportTiers(updatedSupporttiers);
 
     }
 
     const updateSupportTier = (id:number, key:string, value:string|number ) => {
-        setSupportTier(supportTier.map(supporttier =>
+        setSupportTiers(supportTiers.map(supporttier =>
             (supporttier.tempId === id) ? (
                 {...supporttier, [key] : value}
             ) : (
@@ -227,7 +237,7 @@ const CreatePetition: React.FC = () => {
 
                     <TextField
                         id="outlined-basic" variant="outlined" sx={{ width: '400px' }} value={aSupportTier.cost}
-                        onChange={(e) => updateSupportTier(aSupportTier.tempId, "cost", Number(e.target.value))}
+                        onChange={(e) => updateSupportTier(aSupportTier.tempId, "cost", e.target.value)}
                     />
 
                 </Box>
@@ -236,7 +246,7 @@ const CreatePetition: React.FC = () => {
                     variant="contained"
                     style={{ backgroundColor: '#FF0000' }}
                     onClick={() => deleteSupportTiersSlot(aSupportTier.tempId)}
-                    disabled={supportTier.length <= 1}
+                    disabled={supportTiers.length <= 1}
                 >
                     Delete
                 </Button>
@@ -323,9 +333,9 @@ const CreatePetition: React.FC = () => {
                             fontSize: '2rem', textAlign: 'center', marginLeft: '50px', marginTop: '20px', width:'400px'}}>
                             -Support Tier (Max.3)-
                         </Typography>
-                        {supportTier.map(supporttier => addSupportTierForm(supporttier))}
+                        {supportTiers.map(supporttier => addSupportTierForm(supporttier))}
 
-                        <Button sx={{width:'200px', marginTop:'20px', alignSelf:'center'}} variant="contained" onClick={addSupportTiersSlot} disabled={supportTier.length >= 3} >Add Support Tier</Button>
+                        <Button sx={{width:'200px', marginTop:'20px', alignSelf:'center'}} variant="contained" onClick={addSupportTiersSlot} disabled={supportTiers.length >= 3} >Add Support Tier</Button>
 
                     </Box>
                 </Box>

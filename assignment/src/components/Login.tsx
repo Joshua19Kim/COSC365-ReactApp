@@ -46,8 +46,7 @@ const Login: React.FC<LoginProps> = ({ handleCloseModal }) => {
                 navigate('/')
                 localStorage.setItem('token', response.data.token);
                 localStorage.setItem('userId', response.data.userId);
-                console.log("FROM Login, token is : "+localStorage.getItem('token'))
-                console.log("FROM Login, userId is : "+localStorage.getItem('userId'))
+                localStorage.setItem('userEmail', email);
 
             }, (error) => {
                 setErrorFlag(true);
@@ -87,25 +86,15 @@ const Login: React.FC<LoginProps> = ({ handleCloseModal }) => {
                 </Typography>
 
                 <Box height={300} width={400} display="flex" flexDirection="column" justifyContent="center">
-                    <Typography textAlign="center" variant="h6" component="h2"
-                                sx={{fontSize: '1rem', textAlign: 'left', marginRight: '8px', marginTop: '20px'}}>
-                        Email:
-                    </Typography>
-                    <TextField id="outlined-basic" label="Email" variant="outlined"
+                    <TextField id="outlined-basic" label="Email" variant="outlined" sx={{ marginTop: '20px'}}
                                value={email} onChange={setEmailState}/>
-
-                    <Typography textAlign="center" variant="h6" component="h2" sx={{
-                        fontSize: '1rem', textAlign: 'left', marginRight: '8px', marginTop: '20px'
-                    }}>
-                        Password:
-                    </Typography>
                     <TextField
                         id="outlined-basic"
                         label="Password"
                         variant="outlined"
                         type={showPassword ? 'text' : 'password'}
                         value={password}
-                        onChange={setPasswordState}
+                        onChange={setPasswordState} sx={{ marginTop: '20px'}}
                         InputProps={{
                             endAdornment: (
                                 <InputAdornment position="end">
