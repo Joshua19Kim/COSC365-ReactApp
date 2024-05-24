@@ -1,7 +1,7 @@
 import React, {ChangeEvent} from "react";
-import {Box, Button, Card, CardContent, Container, Grid, IconButton, Modal, Typography} from "@mui/material";
+import {Box, Button, Card, CardContent, Container, Grid, IconButton, Modal, TextField, Typography} from "@mui/material";
 import ResponsiveAppBar from "./ResponsiveAppBar";
-import {useLocation, useNavigate, useParams} from "react-router-dom";
+import {Link, useLocation, useNavigate, useParams} from "react-router-dom";
 import ImageNotSupportedIcon from "@mui/icons-material/ImageNotSupported";
 import axios from "axios";
 import Avatar from "@mui/material/Avatar";
@@ -32,16 +32,21 @@ const User = () => {
     const [noAccessErrorMessage, setNoAccessErrorMessage] = React.useState("")
     const [userImage, setUserImage] = React.useState<string | null>(null);
     const [currentUser, setCurrentUser] = React.useState<userDetail>({firstName:"", lastName:"", email:""})
+    const [updatedUser, setUpdatedUser] = React.useState<userDetail>({firstName:"", lastName:"", email:""})
     const [hasImage, setHasImage] = React.useState<boolean>(false)
     const [imageType, setImageType] = React.useState<string|null>(null);
     const [selectedImage, setSelectedImage] = React.useState<File | null>(null);
     const [selectedImagePreview, setSelectedImagePreview] = React.useState<string | null>(null);
-
+    const [isEditMode, setIsEditMode] = React.useState<boolean>(false);
     React.useEffect(() => {
         checkAccessWithId()
         getUserDetail()
         getUserImage()
-    }, [id, location])
+    }, [id,hasImage])
+
+    React.useEffect(() => {
+        setUpdatedUser(currentUser)
+    }, [currentUser])
 
 
     const getUserDetail = () => {
@@ -51,9 +56,9 @@ const User = () => {
             .then((response) => {
                 setErrorFlag(false);
                 setErrorMessage("");
-                currentUser.email = response.data.email;
-                currentUser.lastName = response.data.lastName;
-                currentUser.firstName = response.data.firstName;
+                const loggedInUser = {firstName: response.data.firstName, lastName: response.data.lastName,email: response.data.email}
+                setCurrentUser(loggedInUser);
+
             })
             .catch((error) => {
                 console.error("Cannot get the details!", error);
@@ -127,6 +132,11 @@ const User = () => {
                 }
             )
     }
+    const handleEditChange = async() => {
+
+
+
+    }
 
 
     const handleImageChange = (event: ChangeEvent<HTMLInputElement>) => {
@@ -161,6 +171,7 @@ const User = () => {
 
 
 
+
     if (noAccessErrorFlag) {
         return (
             <div>
@@ -185,7 +196,7 @@ const User = () => {
                         User Profile
                     </h1>
                     <Box display="flex" justifyContent="center">
-                        <Card sx={{ border:1, width: 400, height: 600, textAlign: 'center', mt: 4 }}>
+                        <Card sx={{ border:1, width: 400, height: 700, textAlign: 'center', mt: 4 }}>
                             <Box display="flex" justifyContent="center" mt={2}>
                                 {userImage ? (
                                     <Avatar
@@ -210,29 +221,67 @@ const User = () => {
                                     {hasImage && (
                                             <IconButton
                                                 onClick={() => setDeleteModalOpen(true)}
-                                                sx={{
-                                                    color: 'red',
-                                                    bgcolor: 'background.paper',
-                                                    '&:hover': {bgcolor: 'background.paper'}
+                                                sx={{ color: 'red', bgcolor: 'background.paper', '&:hover': {bgcolor: 'background.paper'}
                                                 }}
                                             ><DeleteForeverIcon/>
                                             </IconButton>
                                         )}
                                 </Grid>
                             </Box>
-                            <CardContent sx={{marginTop: '20px'}}>
-                                <Typography variant="h5" component="div" mt={2} sx={{fontSize: '30px', fontWeight: 'bold' }}>
-                                    {currentUser.firstName} {currentUser.lastName}
-                                </Typography>
-                                <Typography variant="body2" color="text.secondary" mt={2} sx={{fontSize:'20px'}}>
-                                    {currentUser.email}
-                                </Typography>
-                                {errorFlag && (
-                                    <Typography variant="body2" color="error" mt={2}>
-                                        Error: {errorMessage}
-                                    </Typography>
+                            {isEditMode ? (
+                                <>
+                                    <CardContent sx={{marginTop: '20px'}}>
+                                        <TextField label="First Name" name="firstName" value={updatedUser.firstName}
+                                                   onChange={handleEditChange}
+                                                   fullWidth sx={{ marginBottom: '16px' }}/>
+                                        <TextField label="Last Name" name="lastName" value={updatedUser.lastName}
+                                                   onChange={handleEditChange}
+                                                   fullWidth sx={{ marginBottom: '16px' }}/>
+                                        <TextField label="Email" name="email" value={updatedUser.email}
+                                                   onChange={handleEditChange}
+                                                   fullWidth sx={{ marginBottom: '16px' }}/>
+                                        {errorFlag && (
+                                            <Typography variant="body2" color="error" mt={2}>
+                                                Error: {errorMessage}
+                                            </Typography>
+                                        )}
+                                        <Box sx={{marginTop:'20px',display: 'flex', gap: '50px',}}>
+                                            <Button variant="contained" sx={{ width: '200px', height: '50px' }} >
+                                                {/*onClick={handleSave}*/}
+                                                Save
+                                            </Button>
+                                            <Button variant="contained" color="secondary"  onClick={()=>setIsEditMode(false)}  sx={{ width: '200px', height: '50px' }} >
+                                                Cancel
+                                            </Button>
+                                        </Box>
+
+                                    </CardContent>
+                                </>
+                                ) : (
+                                    <>
+                                        <CardContent sx={{marginTop: '20px'}}>
+
+                                            <Typography variant="h5" component="div" mt={2} sx={{fontSize: '30px', fontWeight: 'bold' }}>
+                                                {currentUser.firstName} {currentUser.lastName}
+                                            </Typography>
+                                            <Typography variant="body2" color="text.secondary" mt={2} sx={{fontSize:'20px'}}>
+                                                {currentUser.email}
+                                            </Typography>
+                                            {errorFlag && (
+                                                <Typography variant="body2" color="error" mt={2}>
+                                                    Error: {errorMessage}
+                                                </Typography>
+                                            )}
+                                            <Button variant="contained" onClick={()=>setIsEditMode(true)} sx={{ width: '200px', height: '50px', marginTop:' 30px'}}>
+                                                Edit
+                                            </Button>
+
+                                        </CardContent>
+                                    </>
+
                                 )}
-                            </CardContent>
+
+
                         </Card>
                     </Box>
                 </Container>
