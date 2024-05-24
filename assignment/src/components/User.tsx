@@ -1,5 +1,18 @@
-import React, {ChangeEvent} from "react";
-import {Box, Button, Card, CardContent, Container, Grid, IconButton, Modal, TextField, Typography} from "@mui/material";
+import React, {ChangeEvent, useState} from "react";
+import {
+    Alert,
+    Box,
+    Button,
+    Card,
+    CardContent,
+    Container,
+    Grid,
+    IconButton,
+    InputAdornment,
+    Modal,
+    TextField,
+    Typography
+} from "@mui/material";
 import ResponsiveAppBar from "./ResponsiveAppBar";
 import {Link, useLocation, useNavigate, useParams} from "react-router-dom";
 import ImageNotSupportedIcon from "@mui/icons-material/ImageNotSupported";
@@ -7,19 +20,16 @@ import axios from "axios";
 import Avatar from "@mui/material/Avatar";
 import DeleteForeverIcon from '@mui/icons-material/DeleteForever';
 import AddAPhotoIcon from '@mui/icons-material/AddAPhoto';
-import {PhotoCamera} from "@mui/icons-material";
-
-
-
-
-
+import {PhotoCamera, Visibility, VisibilityOff} from "@mui/icons-material";
+import '../css/style.css'
+import CheckIcon from '@mui/icons-material/Check';
 
 
 const User = () => {
 
     const {id} = useParams();
     const navigate = useNavigate();
-    const location = useLocation();
+
     const [errorFlag, setErrorFlag] = React.useState(false)
     const [errorMessage, setErrorMessage] = React.useState("")
     const [modalErrorFlag, setModalErrorFlag] = React.useState(false)
@@ -30,14 +40,29 @@ const User = () => {
     const [deleteModalErrorMessage, setDeleteModalErrorMessage] = React.useState("")
     const [noAccessErrorFlag, setNoAccessErrorFlag] = React.useState(false)
     const [noAccessErrorMessage, setNoAccessErrorMessage] = React.useState("")
+
     const [userImage, setUserImage] = React.useState<string | null>(null);
     const [currentUser, setCurrentUser] = React.useState<userDetail>({firstName:"", lastName:"", email:""})
-    const [updatedUser, setUpdatedUser] = React.useState<userDetail>({firstName:"", lastName:"", email:""})
     const [hasImage, setHasImage] = React.useState<boolean>(false)
     const [imageType, setImageType] = React.useState<string|null>(null);
     const [selectedImage, setSelectedImage] = React.useState<File | null>(null);
     const [selectedImagePreview, setSelectedImagePreview] = React.useState<string | null>(null);
+
     const [isEditMode, setIsEditMode] = React.useState<boolean>(false);
+
+    const [newFirstName, setNewFirstName] = React.useState<string>("")
+    const [newLastName, setNewLastName] = React.useState<string>("")
+    const [newEmail, setNewEmail] = React.useState<string>("")
+    const [currentPassword, setCurrentPassword] = React.useState<string>("")
+    const [newPassword, setNewPassword] = React.useState<string>("")
+    const [showCurrentPassword, setShowCurrentPassword] = useState(false);
+    const [showNewPassword, setShowNewPassword] = useState(false);
+    const [wantUpdatePassword, setWantUpdatePassword] = useState(false);
+
+    const [alertVisible, setAlertVisible] = useState(false);
+    const [alertMessage, setAlertMessage] = useState("");
+
+
     React.useEffect(() => {
         checkAccessWithId()
         getUserDetail()
@@ -45,8 +70,13 @@ const User = () => {
     }, [id,hasImage])
 
     React.useEffect(() => {
-        setUpdatedUser(currentUser)
-    }, [currentUser])
+        getUserDetail()
+        setCurrentPassword('')
+        setNewPassword('')
+        setShowCurrentPassword(false)
+        setShowNewPassword(false)
+        setWantUpdatePassword(false)
+    }, [isEditMode])
 
 
     const getUserDetail = () => {
@@ -54,10 +84,13 @@ const User = () => {
             headers: {'X-Authorization': `${localStorage.getItem("token")}`}
         })
             .then((response) => {
-                setErrorFlag(false);
-                setErrorMessage("");
+                setErrorFlag(false)
+                setErrorMessage("")
                 const loggedInUser = {firstName: response.data.firstName, lastName: response.data.lastName,email: response.data.email}
-                setCurrentUser(loggedInUser);
+                setCurrentUser(loggedInUser)
+                setNewFirstName(response.data.firstName)
+                setNewLastName(response.data.lastName)
+                setNewEmail(response.data.email)
 
             })
             .catch((error) => {
@@ -76,6 +109,7 @@ const User = () => {
                 setDeleteModalOpen(false);
                 setHasImage(false);
                 setUserImage(null);
+                window.location.reload()
             })
             .catch((error) => {
                 console.error("Cannot delete the photo!", error);
@@ -97,8 +131,6 @@ const User = () => {
                     setErrorMessage("")
                 }
                 setHasImage(false)
-
-
             })
     }
 
@@ -120,6 +152,7 @@ const User = () => {
                     setImageModalOpen(false);
                     setSelectedImage(null);
                     getUserImage();
+                    window.location.reload()
                 }, (error) => {
                     setDeleteModalErrorFlag(true);
                     if (error.response.statusText.includes("Payload Too Large")) {
@@ -133,10 +166,81 @@ const User = () => {
             )
     }
     const handleEditChange = async() => {
+        const updateDetail = {
+            email: newEmail,
+            firstName: newFirstName,
+            lastName: newLastName,
+            ...((currentPassword.trim().length > 0 || newPassword.trim().length > 0)
+                && { password: newPassword, currentPassword: currentPassword })
+        };
 
-
-
+        await axios.patch('http://localhost:4941/api/v1/users/'+ id, updateDetail, {
+            headers: {
+                'Content-Type': 'application/json',
+                'X-Authorization': `${localStorage.getItem("token")}`
+            }
+        })
+            .then((response) => {
+                    setErrorFlag(false)
+                    setErrorMessage("")
+                    setIsEditMode(false)
+                    navigate("/user/" + id)
+                    setNewPassword("")
+                    setCurrentPassword("")
+                    showAlert("Your detail has been successfully updated.", "success");
+                }, (error) => {
+                    setErrorFlag(true)
+                    if (error.response.statusText.includes("data/currentPassword must NOT")) {
+                        setErrorMessage("Current Password is too short.")
+                    } else if (error.response.statusText.includes("data/password must NOT have fewer")) {
+                        setErrorMessage("Your new password is too short.")
+                    } else if (error.response.statusText.includes("Incorrect currentPassword")) {
+                        setErrorMessage("Password is not correct.")
+                    } else if (error.response.statusText.includes("email must match format")) {
+                        setErrorMessage("Email is invalid format.")
+                    } else if (error.response.statusText.includes("firstName must NOT have fewer")) {
+                        setErrorMessage("First name can not be empty.")
+                    } else if (error.response.statusText.includes("lastName must NOT")) {
+                        setErrorMessage("Last name can not be empty.")
+                    } else if (error.response.statusText.includes("Email already in use")) {
+                        setErrorMessage("Email is alreay in use.")
+                    } else {
+                        setErrorMessage("You entered the invalid/incorrect information. Try again.")
+                    }
+                }
+            )
     }
+    const setNewFirstNameState = (event: ChangeEvent<HTMLInputElement>) => {
+        setNewFirstName(event.target.value);
+    }
+    const setNewLastNameState = (event: ChangeEvent<HTMLInputElement>) => {
+        setNewLastName(event.target.value);
+    }
+    const setNewEmailState = (event: ChangeEvent<HTMLInputElement>) => {
+        setNewEmail(event.target.value);
+    }
+    const setCurrentPasswordState = (event: ChangeEvent<HTMLInputElement>) => {
+        setCurrentPassword(event.target.value);
+    };
+
+    const setNewPasswordState = (event: ChangeEvent<HTMLInputElement>) => {
+        setNewPassword(event.target.value);
+    };
+
+    const toggleCurrentPasswordVisibility = () => {
+        setShowCurrentPassword((prev) => !prev);
+    };
+    const toggleNewPasswordVisibility = () => {
+        setShowNewPassword((prev) => !prev);
+    };
+
+    const showAlert = (message: React.SetStateAction<string>, severity: React.SetStateAction<string>) => {
+        setAlertMessage(message);
+        setAlertVisible(true);
+        setTimeout(() => {
+            setAlertVisible(false);
+        }, 3000);
+    };
 
 
     const handleImageChange = (event: ChangeEvent<HTMLInputElement>) => {
@@ -170,8 +274,6 @@ const User = () => {
     }
 
 
-
-
     if (noAccessErrorFlag) {
         return (
             <div>
@@ -192,20 +294,20 @@ const User = () => {
             <div>
                 <ResponsiveAppBar />
                 <Container>
-                    <h1 style={{ flex: 1, textAlign: 'center', fontSize: '40px' }}>
+                    <h1 style={{ textAlign: 'center', fontSize: '40px' }}>
                         User Profile
                     </h1>
                     <Box display="flex" justifyContent="center">
-                        <Card sx={{ border:1, width: 400, height: 700, textAlign: 'center', mt: 4 }}>
+                        <Card sx={{ display: "flex", border: 1, width: 700, alignContent: 'center', alignItems: 'center', flexDirection: 'column', justifyContent: 'center', textAlign: 'center', mt: 4, boxShadow: 10 }}>
                             <Box display="flex" justifyContent="center" mt={2}>
                                 {userImage ? (
                                     <Avatar
                                         alt={`${currentUser.firstName} ${currentUser.lastName}`}
                                         src={userImage}
-                                        sx={{ width: 300, height: 300, border:1, }}
+                                        sx={{ width: 250, height: 250, border:1, }}
                                     />
                                 ) : (
-                                    <Avatar sx={{ width: 300, height: 300, border:1 }}>
+                                    <Avatar sx={{ width: 250, height: 250, border:1 }}>
                                         <ImageNotSupportedIcon sx={{ fontSize: '100px' }} />
                                     </Avatar>
                                 )}
@@ -231,29 +333,72 @@ const User = () => {
                             {isEditMode ? (
                                 <>
                                     <CardContent sx={{marginTop: '20px'}}>
-                                        <TextField label="First Name" name="firstName" value={updatedUser.firstName}
-                                                   onChange={handleEditChange}
-                                                   fullWidth sx={{ marginBottom: '16px' }}/>
-                                        <TextField label="Last Name" name="lastName" value={updatedUser.lastName}
-                                                   onChange={handleEditChange}
-                                                   fullWidth sx={{ marginBottom: '16px' }}/>
-                                        <TextField label="Email" name="email" value={updatedUser.email}
-                                                   onChange={handleEditChange}
-                                                   fullWidth sx={{ marginBottom: '16px' }}/>
+                                        <TextField label="First Name" name="firstName" value={newFirstName}
+                                                   onChange={setNewFirstNameState}
+                                                   fullWidth sx={{marginBottom:'10px'}}/>
+                                        <TextField label="Last Name" name="lastName" value={newLastName}
+                                                   onChange={setNewLastNameState}
+                                                   fullWidth sx={{marginBottom:'10px'}}/>
+                                        <TextField label="Email" name="email" value={newEmail}
+                                                   onChange={setNewEmailState}
+                                                   fullWidth sx={{marginBottom:'10px'}}/>
+                                        {wantUpdatePassword && (
+                                            <Box>
+                                                <TextField label="Current Password" name="oldPassword" value={currentPassword} type={showCurrentPassword ? 'text' : 'password'}
+                                                           onChange={setCurrentPasswordState}
+                                                           InputProps={{
+                                                               endAdornment: (
+                                                                   <InputAdornment position="end">
+                                                                       <IconButton
+                                                                           aria-label="toggle password visibility"
+                                                                           onClick={toggleCurrentPasswordVisibility}
+                                                                           edge="end"
+                                                                       >
+                                                                           {showCurrentPassword ? <VisibilityOff/> : <Visibility/>}
+                                                                       </IconButton>
+                                                                   </InputAdornment>
+                                                               )
+                                                           }}
+                                                           fullWidth sx={{marginBottom:'10px'}}/>
+                                                <TextField label="New Password" name="newPassword" value={newPassword}
+                                                           type={showNewPassword ? 'text' : 'password'}
+                                                           onChange={setNewPasswordState}
+                                                           InputProps={{
+                                                               endAdornment: (
+                                                                   <InputAdornment position="end">
+                                                                       <IconButton
+                                                                           aria-label="toggle password visibility"
+                                                                           onClick={toggleNewPasswordVisibility}
+                                                                           edge="end"
+                                                                       >
+                                                                           {showNewPassword ? <VisibilityOff/> : <Visibility/>}
+                                                                       </IconButton>
+                                                                   </InputAdornment>
+                                                               )
+                                                           }}
+                                                           fullWidth sx={{marginBottom:'10px', height:'30px'}}/>
+                                            </Box>
+                                        )}
+
                                         {errorFlag && (
                                             <Typography variant="body2" color="error" mt={2}>
                                                 Error: {errorMessage}
                                             </Typography>
                                         )}
-                                        <Box sx={{marginTop:'20px',display: 'flex', gap: '50px',}}>
-                                            <Button variant="contained" sx={{ width: '200px', height: '50px' }} >
-                                                {/*onClick={handleSave}*/}
+                                        <Box sx={{marginTop:'30px',display: 'flex', gap: '50px',alignContent: 'center', alignItems: 'center', flexDirection: 'row', justifyContent: 'center', textAlign: 'center',}}>
+                                            <Button variant="contained" sx={{ width: '200px', height: '50px' }} onClick={handleEditChange}>
                                                 Save
                                             </Button>
                                             <Button variant="contained" color="secondary"  onClick={()=>setIsEditMode(false)}  sx={{ width: '200px', height: '50px' }} >
                                                 Cancel
                                             </Button>
                                         </Box>
+                                        {!wantUpdatePassword && (
+                                            <Button variant="contained" sx={{ width: '200px', height: '50px', marginTop:'40px' }} onClick={()=>setWantUpdatePassword(true)}>
+                                                Update password
+                                            </Button>
+                                        )}
+
 
                                     </CardContent>
                                 </>
@@ -275,7 +420,11 @@ const User = () => {
                                             <Button variant="contained" onClick={()=>setIsEditMode(true)} sx={{ width: '200px', height: '50px', marginTop:' 30px'}}>
                                                 Edit
                                             </Button>
-
+                                            {alertVisible && (
+                                                <Alert icon={<CheckIcon fontSize="inherit" />}>
+                                                    {alertMessage}
+                                                </Alert>
+                                            )}
                                         </CardContent>
                                     </>
 

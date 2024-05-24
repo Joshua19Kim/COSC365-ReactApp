@@ -63,17 +63,6 @@ const Login: React.FC<LoginProps> = ({ handleCloseModal }) => {
     }
 
 
-    if (errorFlag) {
-        return (
-            <div>
-                <h1>Login</h1>
-                <div style={{color: "red"}}>
-                    {errorMessage}
-                </div>
-            </div>
-        )}
-    else
-    {
         return (
             <div>
                 <Typography
@@ -89,12 +78,8 @@ const Login: React.FC<LoginProps> = ({ handleCloseModal }) => {
                     <TextField id="outlined-basic" label="Email" variant="outlined" sx={{ marginTop: '20px'}}
                                value={email} onChange={setEmailState}/>
                     <TextField
-                        id="outlined-basic"
-                        label="Password"
-                        variant="outlined"
-                        type={showPassword ? 'text' : 'password'}
-                        value={password}
-                        onChange={setPasswordState} sx={{ marginTop: '20px'}}
+                        id="outlined-basic" label="Password" variant="outlined" type={showPassword ? 'text' : 'password'}
+                        value={password} onChange={setPasswordState} sx={{ marginTop: '20px'}}
                         InputProps={{
                             endAdornment: (
                                 <InputAdornment position="end">
@@ -126,7 +111,6 @@ const Login: React.FC<LoginProps> = ({ handleCloseModal }) => {
 
 
         )
-    }
 
 }
 

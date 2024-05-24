@@ -1,18 +1,8 @@
-type userRegister = {
-    firstName: string,
-    lastName: string,
-    email: string,
-    password: string
-}
+
 
 type userLogin = {
     email: string,
     password: string
-}
-
-type loggedInUser = {
-    userId: number,
-    token: string,
 }
 
 type user = {

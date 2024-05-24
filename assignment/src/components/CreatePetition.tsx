@@ -1,8 +1,8 @@
 import React, {ChangeEvent, useEffect, useState} from "react";
 import ResponsiveAppBar from "./ResponsiveAppBar";
 import {
-    Box, Button,
-    Container,
+    Box, Button, Card,
+    Container, Grid,
     IconButton,
     List,
     ListItemButton,
@@ -15,6 +15,9 @@ import {
 import {PhotoCamera} from "@mui/icons-material";
 import axios from "axios";
 import {Link, useLocation, useNavigate} from "react-router-dom";
+import AddAPhotoIcon from "@mui/icons-material/AddAPhoto";
+import DeleteForeverIcon from "@mui/icons-material/DeleteForever";
+import ImageNotSupportedIcon from "@mui/icons-material/ImageNotSupported";
 
 
 const CreatePetition: React.FC = () => {
@@ -40,6 +43,7 @@ const CreatePetition: React.FC = () => {
     const [modalOpen, setModalOpen] = useState(false);
 
     const [imageType, setImageType] = React.useState<string|null>(null);
+    const [petitionImage, setPetitionImage] = React.useState<string | null>(null);
     const [selectedImage, setSelectedImage] = React.useState<File | null>(null);
     const [selectedImagePreview, setSelectedImagePreview] = React.useState<string | null>(null);
 
@@ -51,6 +55,10 @@ const CreatePetition: React.FC = () => {
     useEffect(() => {
         setCategoryState();
     }, [selectedIndexCategory]);
+
+    useEffect(() => {
+        sendPetitionImage()
+    }, [newPetitionId])
 
 
     const handleClickListItem = (event: React.MouseEvent<HTMLElement>) => {
@@ -71,6 +79,11 @@ const CreatePetition: React.FC = () => {
 
 
     const createPetition = async () => {
+        if (!selectedImage) {
+            setErrorFlag(true);
+            setErrorMessage("Please select an image.");
+            return;
+        }
         for(let supportier of supportTiers ) {
             if (isNaN(Number(supportier.cost))) {
                 setErrorFlag(true);
@@ -94,8 +107,8 @@ const CreatePetition: React.FC = () => {
             .then((response) => {
                     setErrorFlag(false);
                     setErrorMessage("");
-                    setModalOpen(true);
                     setNewPetitionId(response.data.petitionId);
+
             }, (error) => {
                 setErrorFlag(true);
                 if (error.response.statusText.includes("data/title must NOT have")) {
@@ -110,6 +123,8 @@ const CreatePetition: React.FC = () => {
                     setErrorMessage("Need at least one Support Tier. You haven't entered the description.");
                 } else if (error.response.statusText.includes("Duplicate petition")) {
                     setErrorMessage("There is the same name of petition.");
+                } else if (error.response.statusText.includes("supportTiers must have unique titles")) {
+                    setErrorMessage("Each support tier name have to be unique.");
                 } else {
                     setErrorMessage("You typed invalid input. Try again.");
                 }
@@ -117,11 +132,7 @@ const CreatePetition: React.FC = () => {
         )
     }
     const sendPetitionImage = async () => {
-        if (!selectedImage) {
-            setModalErrorFlag(true);
-            setModalErrorMessage("Please select an image.");
-            return;
-        }
+
         await axios.put(`http://localhost:4941/api/v1/petitions/${newPetitionId}/image`, selectedImage, {
             headers: {
                 'Content-Type': imageType,
@@ -147,7 +158,6 @@ const CreatePetition: React.FC = () => {
 
     const handleImageChange = (event: ChangeEvent<HTMLInputElement>) => {
         const file = event.target.files?.[0];
-        console.log(file)
         if (file) {
             const allowedTypes = ['image/png', 'image/jpeg', 'image/gif'];
             if (!allowedTypes.includes(file.type)) {
@@ -202,59 +212,53 @@ const CreatePetition: React.FC = () => {
 
 
     const addSupportTierForm = (aSupportTier:SupportTierPost) => {
-
         return (
-            <Box sx={{border:1, marginTop:'40px', width:'500px', height:'400px'}}>
-                <Box id={"firstSupportTier"} sx={{ alignContent: 'center', alignItems: 'center', flexDirection: 'row' }}>
+            <Box display="flex" justifyContent="center">
+                <Card sx={{ display: "flex", border: 1, width: 500, height:400, flexDirection: 'column', textAlign: 'center', mt: 4, boxShadow: 10 }}>
+                    <Box id={"firstSupportTier"} sx={{ alignContent: 'center', alignItems: 'center', flexDirection: 'row' }}>
 
-                    <Typography textAlign="center" variant="h6" component="h2"
-                        sx={{fontSize: '1rem', textAlign: 'left', marginLeft: '40px', marginTop: '20px', width: '400px'
-                    }}
-                    >
-                        Title:
-                    </Typography>
+                        <Typography textAlign="center" variant="h6" component="h2"
+                                    sx={{fontSize: '1rem', textAlign: 'left', marginLeft: '40px', marginTop: '20px', width: '400px'
+                                    }}
+                        >
+                            Title:
+                        </Typography>
 
-                    <TextField id="outlined-basic" variant="outlined" sx={{ width: '400px' }} value={aSupportTier.title}
-                        onChange={(e) => updateSupportTier(aSupportTier.tempId, "title", e.target.value)}
-                    />
+                        <TextField id="outlined-basic" variant="outlined" sx={{ width: '400px' }} value={aSupportTier.title}
+                                   onChange={(e) => updateSupportTier(aSupportTier.tempId, "title", e.target.value)}
+                        />
+                        <Typography textAlign="center" variant="h6" component="h2"
+                                    sx={{fontSize: '1rem', textAlign: 'left', marginLeft: '40px', marginTop: '20px', width: '400px'}}
+                        >
+                            Description:
+                        </Typography>
 
-                    <Typography textAlign="center" variant="h6" component="h2"
-                        sx={{fontSize: '1rem', textAlign: 'left', marginLeft: '40px', marginTop: '20px', width: '400px'}}
-                    >
-                        Description:
-                    </Typography>
-
-                    <TextField id="outlined-basic" variant="outlined" multiline rows={3} InputProps={{
+                        <TextField id="outlined-basic" variant="outlined" multiline rows={3} InputProps={{
                             sx: { minHeight: '100px', width: '400px' }}} value={aSupportTier.description}
-                        onChange={(e) => updateSupportTier(aSupportTier.tempId, "description", e.target.value)}
-                    />
+                                   onChange={(e) => updateSupportTier(aSupportTier.tempId, "description", e.target.value)}
+                        />
 
-                    <Typography textAlign="center" variant="h6" component="h2"
-                        sx={{fontSize: '1rem', textAlign: 'left', marginLeft: '40px', marginTop: '20px', width: '400px'}}
+                        <Typography textAlign="center" variant="h6" component="h2"
+                                    sx={{fontSize: '1rem', textAlign: 'left', marginLeft: '40px', marginTop: '20px', width: '400px'}}
+                        >
+                            Cost:
+                        </Typography>
+
+                        <TextField
+                            id="outlined-basic" variant="outlined" sx={{ width: '400px' }} value={aSupportTier.cost}
+                            onChange={(e) => updateSupportTier(aSupportTier.tempId, "cost", e.target.value)}
+                        />
+                    </Box>
+                    <Button
+                        sx={{marginTop:'5px', marginBottom:'10px',  backgroundColor: '#FF0000', '&:hover': {backgroundColor: '#8B0000',},}}
+                        variant="contained"
+                        onClick={() => deleteSupportTiersSlot(aSupportTier.tempId)}
+                        disabled={supportTiers.length <= 1}
                     >
-                        Cost:
-                    </Typography>
-
-                    <TextField
-                        id="outlined-basic" variant="outlined" sx={{ width: '400px' }} value={aSupportTier.cost}
-                        onChange={(e) => updateSupportTier(aSupportTier.tempId, "cost", e.target.value)}
-                    />
-
-                </Box>
-                <Button
-                    sx={{marginTop:'5px', marginBottom:'10px'}}
-                    variant="contained"
-                    style={{ backgroundColor: '#FF0000' }}
-                    onClick={() => deleteSupportTiersSlot(aSupportTier.tempId)}
-                    disabled={supportTiers.length <= 1}
-                >
-                    Delete
-                </Button>
-
-
-
+                        Delete
+                    </Button>
+                </Card>
             </Box>
-
         )
     }
 
@@ -270,6 +274,11 @@ const CreatePetition: React.FC = () => {
     const setDescriptionState = (event: ChangeEvent<HTMLInputElement>) => {
         setDescription(event.target.value);
     }
+    const showImage = () => {
+        setModalOpen(false)
+        setPetitionImage(selectedImagePreview)
+        setSelectedImagePreview(null)
+    }
 
 
 
@@ -279,27 +288,51 @@ const CreatePetition: React.FC = () => {
             <ResponsiveAppBar/>
         <Container style={{
             position: 'relative', flexDirection: 'column', justifyContent: 'center', alignItems: 'center',
-            height: 1000, width: 1300, marginTop:50}}>
+            height: 1000, width: 2000, marginTop:50}}>
 
             <Box sx={{marginBottom:'20px'}}>
                 <h1 style={{fontSize: '40px'}}>Create A Petition</h1>
             </Box>
             <Container style={{
-                position: 'relative', flexDirection: 'column', justifyContent: 'center', alignItems: 'center',
-                height: 800, width: 1300, marginTop:70}}>
-                <Box id={"title&category&desription"} height={500} width={2200} display={"flex"}>
-                    <Box id={"title&category&description"} sx={{height:"400px", width:"400px", marginLeft: '40px'}} display="flex" flexDirection="column" justifyContent="center">
-                        <Typography textAlign="center" variant="h6" component="h2" sx={{ fontSize: '1rem', textAlign: 'left', marginRight: '8px', marginTop: '20px' }}>
-                            Title:
-                        </Typography>
-                        <TextField id="outlined-basic" variant="outlined"
+                display: 'flex', flexDirection: 'row', justifyContent: 'center', alignItems: 'center', height: 800, width: 2000}}>
+                <Box display="flex" justifyContent="center" sx={{margin:'3rem'}}>
+                    <Card sx={{ display: "flex", border: 1, width: 500, height:550, flexDirection: 'column', textAlign: 'center', alignContent:'center',alignItems:'center', boxShadow: 10 }}>
+                        <Card sx={{ display: "flex", border: 1, width: 400, height:400,  textAlign: 'center', margin:'1rem', justifyContent: 'center', alignItems: 'center'}}>
+                            {petitionImage ? (
+                                <img
+                                    src={petitionImage}
+                                    alt="Petition Image"
+                                    style={{ maxHeight: '100%', maxWidth: '100%', objectFit: 'contain' }}
+                                />
+                            ) : (
+                                <ImageNotSupportedIcon sx={{fontSize: 100, alignSelf:'center',}}></ImageNotSupportedIcon>
+                            )}
+
+                        </Card>
+                            <IconButton onClick={() => setModalOpen(true)}
+                                        sx={{color: '#A7C7E7', bgcolor: 'background.paper',
+                                            '&:hover': {bgcolor: 'background.paper'}}}
+                            >
+                                <AddAPhotoIcon />
+                            </IconButton>
+
+
+                    </Card>
+                </Box>
+
+                <Box display="flex" justifyContent="center">
+                    <Card sx={{ display: "flex", border: 1, width: 500, height:600, flexDirection: 'column', textAlign: 'center', boxShadow: 10, margin:'3rem' }}>
+                            <Typography textAlign="center" variant="h6" component="h2" sx={{ fontSize: '1.5rem', textAlign:'left', marginTop:'1.5', marginLeft:'3rem'}}>
+                                Title:
+                            </Typography>
+                        <TextField id="outlined-basic" variant="outlined" sx={{width:'400px', alignSelf:'center'}}
                                    value={title} onChange={setTitleState} />
 
-                        <Typography textAlign="center" variant="h6" component="h2" sx={{ fontSize: '1rem', textAlign: 'left', marginRight: '8px', marginTop: '20px' }}>
+                        <Typography textAlign="center" variant="h6" component="h2" sx={{ fontSize: '1.5rem', textAlign:'left', marginLeft:'3rem', marginTop:'1rem'}}>
                             Category:
                         </Typography>
 
-                        <Box sx={{border: '1px solid', borderColor: 'gray', borderRadius: '8px', }}>
+                        <Box sx={{border: '1px solid', borderColor: 'gray', borderRadius: '8px', width:'400px', height: '50px', alignSelf:'center' }}>
                             <List component="nav" aria-label="Device settings" sx={{ bgcolor: 'background.paper' }}>
                                 <ListItemButton
                                     id="lock-button" aria-haspopup="listbox" aria-controls="lock-menu" aria-label="when device is locked"
@@ -308,7 +341,7 @@ const CreatePetition: React.FC = () => {
                                 </ListItemButton>
                             </List>
                             <Menu id="lock-menu" anchorEl={anchorEl} open={open} onClose={handleClose}
-                                MenuListProps={{'aria-labelledby': 'lock-button', role: 'listbox',}}>
+                                  MenuListProps={{'aria-labelledby': 'lock-button', role: 'listbox',}}>
                                 {categoryNames.map((option, index) => (
                                     <MenuItem
                                         key={option} selected={index === selectedIndexCategory} onClick={(event) => handleMenuItemClick(event, index)}>{option}
@@ -317,44 +350,41 @@ const CreatePetition: React.FC = () => {
                             </Menu>
                         </Box>
 
-
-                        <Typography textAlign="center" variant="h6" component="h2" sx={{ fontSize: '1rem', textAlign: 'left', marginRight: '8px', marginTop: '20px' }}>
+                        <Typography textAlign="center" variant="h6" component="h2" sx={{fontSize: '1.5rem', textAlign:'left', marginLeft:'3rem', marginTop:'1rem'}}>
                             Description:
                         </Typography>
                         <TextField id="outlined-basic" variant="outlined" value={description} onChange={setDescriptionState} multiline
-                            rows={7} sx={{ height: '400px', width: '400px' }} InputProps={{
-                                sx: {height: '100%',}}}
+                                   rows={5} sx={{ height: '300', width: '400px',alignSelf:'center' }} InputProps={{
+                            sx: {height: '100%',}}}
                         />
-
-                    </Box>
-
-                    <Box id={"supportTiers"} sx={{ display: 'flex', flexDirection: 'column', marginLeft: '100px', alignContent:'center' }} height={700} width={500} display={"flex"}>
-                        <Typography textAlign="center" variant="h6" component="h2" sx={{
-                            fontSize: '2rem', textAlign: 'center', marginLeft: '50px', marginTop: '20px', width:'400px'}}>
-                            -Support Tier (Max.3)-
-                        </Typography>
-                        {supportTiers.map(supporttier => addSupportTierForm(supporttier))}
-
-                        <Button sx={{width:'200px', marginTop:'20px', alignSelf:'center'}} variant="contained" onClick={addSupportTiersSlot} disabled={supportTiers.length >= 3} >Add Support Tier</Button>
-
-                    </Box>
+                        <Box sx={{ marginLeft:'50px',display: 'flex', gap: '50px'}}>
+                            {errorFlag && (
+                                <Typography color="error" sx={{ marginTop: '20px', textAlign:'center'}}>
+                                    {errorMessage}
+                                </Typography>
+                            )}
+                        </Box>
+                        <Box id={"buttons"} sx={{ alignSelf:'center', marginTop:'5rem',display: 'flex', gap: '50px',}}>
+                            <Button variant="contained" sx={{ width: '200px', height: '50px' }} onClick={createPetition}>Create</Button>
+                            <Link to={'/'}>
+                                <Button variant="contained" sx={{ width: '200px', height: '50px',backgroundColor: '#FF0000', '&:hover': {backgroundColor: '#8B0000',},}}>Cancel</Button>
+                            </Link>
+                        </Box>
+                    </Card>
                 </Box>
 
-                <Box sx={{ marginLeft:'50px',display: 'flex', gap: '50px'}}>
-                    {errorFlag && (
-                        <Typography color="error" sx={{ marginTop: '20px', textAlign:'center'}}>
-                            {errorMessage}
-                        </Typography>
-                    )}
-                </Box>
-                <Box id={"buttons"} sx={{ marginLeft:'50px', marginTop:'20px',display: 'flex', gap: '50px',}}>
-                    <Button variant="contained" sx={{ width: '200px', height: '50px' }} onClick={createPetition}>Create</Button>
-                    <Link to={'/'}>
-                        <Button variant="contained" sx={{ width: '200px', height: '50px', backgroundColor: '#FF0000' }}>Cancel</Button>
-                    </Link>
-                </Box>
+                <Box id={"supportTiers"} sx={{ display: 'flex', flexDirection: 'column', margin: '3rem', alignContent:'center' }} height={700} width={500} display={"flex"}>
+                    <Typography textAlign="center" variant="h6" component="h2" sx={{
+                        fontSize: '2rem', textAlign: 'center', marginLeft: '50px', marginTop: '20px', width:'400px'}}>
+                        -Support Tier (Max.3)-
+                    </Typography>
+                    {supportTiers.map(supporttier => addSupportTierForm(supporttier))}
 
+                    <Button sx={{width:'200px', marginTop:'20px', alignSelf:'center'}} variant="contained" onClick={addSupportTiersSlot} disabled={supportTiers.length >= 3} >Add Support Tier</Button>
+
+                </Box>
             </Container>
+
 
             <Modal open={modalOpen} onClose={() => setModalOpen(false)}>
                 <Box sx={{
@@ -362,7 +392,7 @@ const CreatePetition: React.FC = () => {
                     transform: 'translate(-50%, -50%)', width: 400, bgcolor: 'background.paper', border: '2px solid #000', boxShadow: 24, p: 4
                 }}>
                     <Typography variant="h6" component="h2">
-                        Upload Petition Image (Optional)
+                        Upload Petition Image.
                     </Typography>
                     <input
                         accept="image/png, image/jpeg, image/gif"
@@ -387,10 +417,10 @@ const CreatePetition: React.FC = () => {
                                 {modalErrorMessage}
                             </Typography>
                         )}
-                        <Button variant="contained" color="primary" onClick={sendPetitionImage}>
+                        <Button variant="contained" color="primary" onClick={showImage}>
                             Upload
                         </Button>
-                        <Button variant="contained" color="secondary" onClick={() => navigate('/petitions')}>
+                        <Button variant="contained" color="secondary" onClick={() => setModalOpen(false)}>
                             Skip
                         </Button>
                     </Box>

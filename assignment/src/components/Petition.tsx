@@ -216,7 +216,7 @@ const Petition = () => {
                                 Edit
                             </Button></Link>
                             <Button variant="contained" sx={{ width: '100px', height: '50px', backgroundColor: '#FF0000', '&:hover': {
-                                    backgroundColor: '#8B0000', // Dark red color
+                                    backgroundColor: '#8B0000',
                                 }, }} onClick={() => setModalOpen(true)}>
                                 Delete
                             </Button>
