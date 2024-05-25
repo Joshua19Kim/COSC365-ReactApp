@@ -13,7 +13,7 @@ import {
     TableCell,
     TableContainer,
     TableHead,
-    TableRow, Typography
+    TableRow, TextField, Typography
 } from "@mui/material";
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import Avatar from "@mui/material/Avatar";
@@ -22,6 +22,7 @@ import error = Simulate.error;
 import ResponsiveAppBar from "./ResponsiveAppBar";
 import {PhotoCamera} from "@mui/icons-material";
 import ImageNotSupportedIcon from '@mui/icons-material/ImageNotSupported';
+import Diversity2Icon from "@mui/icons-material/Diversity2";
 
 
 const Div = styled('div')(({ theme }) => ({
@@ -33,11 +34,15 @@ const Div = styled('div')(({ theme }) => ({
 const Petition = () => {
 
     const {id} = useParams();
+    const [userId, setUserId] = React.useState<number>(0);
     const navigate = useNavigate();
     const [errorFlag, setErrorFlag] = React.useState(false)
     const [errorMessage, setErrorMessage] = React.useState("")
     const [modalErrorFlag, setModalErrorFlag] = React.useState(false)
     const [modalErrorMessage, setModalErrorMessage] = React.useState("")
+    const [errorSupportModalFlag, setErrorSupportModalFlag] = React.useState(false)
+    const [errorSupportModalMessage, setErrorSupportModalMessage] = React.useState("")
+
     const [petition, setPetition]
         = React.useState<PetitionFull>({
         petitionId: 0, title: "", categoryId: 0, creationDate: "", ownerId: 0, ownerFirstName: "", ownerLastName: "",
@@ -49,6 +54,10 @@ const Petition = () => {
     const [supporters, setSupporters] = React.useState<Supporter[]>([])
     const [isUserTheOwner, setIsUserTheOwner] = React.useState<boolean>(false);
     const [modalOpen, setModalOpen] = React.useState(false);
+    const [openSupportModal, setOpenSupportModal] = React.useState(false);
+    const [message, setMessage] = React.useState<string>('');
+    const [supportTierId, SetSupportTier] = React.useState<number>(-1);
+
 
 
 
@@ -58,6 +67,9 @@ const Petition = () => {
         getPetitionImage()
         getSupporters()
         getCategories()
+        setIsUserTheOwner(false);
+        const currentUserId = Number(localStorage.getItem('userId'));
+        setUserId(currentUserId)
     }, [id])
 
     React.useEffect(() => {
@@ -65,8 +77,7 @@ const Petition = () => {
             getPetitions();
         }
         if(localStorage.getItem('userId')) {
-            const currentUserId = Number(localStorage.getItem('userId'));
-            if (currentUserId === petition.ownerId) {
+            if (userId === petition.ownerId) {
                 setIsUserTheOwner(true);
             }
         }
@@ -89,7 +100,7 @@ const Petition = () => {
                 setPetition(response.data)
             }, (error) => {
                 setErrorFlag(true)
-                setErrorMessage(error.toString())
+                setErrorMessage(error.response.statusText)
             })
     }
     const getPetitions = () => {
@@ -100,7 +111,7 @@ const Petition = () => {
                 setPetitions(response.data.petitions)
             }, (error) => {
                 setErrorFlag(true)
-                setErrorMessage(error.toString())
+                setErrorMessage(error.response.statusText)
             })
     }
     const getCategoryName = (categoryId: number) => {
@@ -116,7 +127,7 @@ const Petition = () => {
                 setSupporters(response.data)
             }, (error) => {
                 setErrorFlag(true)
-                setErrorMessage(error.toString())
+                setErrorMessage(error.response.statusText);
             })
     }
     const getCategories = () => {
@@ -127,7 +138,7 @@ const Petition = () => {
                 setCategories(response.data)
             }, (error) => {
                 setErrorFlag(true)
-                setErrorMessage(error.toString())
+                setErrorMessage(error.response.statusText)
             })
     }
 
@@ -143,7 +154,7 @@ const Petition = () => {
                 setPetitionImage(URL.createObjectURL(response.data))
             }, (error) => {
                 setErrorFlag(true)
-                setErrorMessage(error.toString())
+                setErrorMessage(error.response.statusText)
             })
     }
 
@@ -169,7 +180,7 @@ const Petition = () => {
             .then((response) => {
                     setModalErrorFlag(false);
                     setModalErrorMessage("");
-                    navigate("/petitions/");
+                    navigate(-1);
                 }, (error) => {
                     setModalErrorFlag(true);
                 if (error.response.statusText.includes("Unauthorized" || "Only the owner of")) {
@@ -181,11 +192,68 @@ const Petition = () => {
                 } else if (error.response.statusText.includes("Internal Server Error")) {
                     setModalErrorMessage("Server Error");
                 } else {
-                    setModalErrorMessage("Failed to delete this petition, ask a Developer.");
+                    setModalErrorMessage(error.response.statusText);
                 }
                 }
             )
     }
+
+    const sendSupporter = async () => {
+        const supporterRequest = (message.trim().length ===0)
+            ? {supportTierId}
+            : {supportTierId, message}
+
+
+        if (message.length > 512) {
+            setErrorSupportModalFlag(true);
+            setErrorSupportModalMessage("The maximum message length is 512. It is too long. ")
+            return
+        }
+        console.log("hoho"+ supportTierId + " asdf " + petition.petitionId)
+        await axios.post('http://localhost:4941/api/v1/petitions/'+ petition.petitionId +'/supporters', supporterRequest,{
+            headers: {
+                'X-Authorization': `${localStorage.getItem("token")}`
+            }
+        })
+            .then((response) => {
+                setErrorSupportModalFlag(false);
+                setErrorSupportModalMessage("")
+                setOpenSupportModal(false)
+                window.location.reload()
+            }, (error) => {
+                setModalErrorFlag(true);
+                if (error.response.statusText.includes("Payload Too Large")) {
+                    setModalErrorMessage("Your image size is too big.");
+                } else if (error.response.statusText.includes("photo must be image/jpeg,")) {
+                    setModalErrorMessage("You put invalid image. Please put .jpg, .png or .gif.");
+                } else {
+                    setErrorMessage(error.response.statusText);
+                }
+            }
+        )
+    }
+
+
+    const hasSupported = (currentSupportTierId:number) => {
+        for (const supporter of supporters) {
+            if (supporter.supportTierId === currentSupportTierId && supporter.supporterId === userId) {
+                return true
+            }
+        }
+        return false
+
+    }
+
+
+    const clickSupport = (currentSupportTier: number) => {
+        setOpenSupportModal(true)
+        SetSupportTier(currentSupportTier)
+    }
+
+    const handleDescriptionChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+        setMessage(event.target.value);
+    }
+
 
     if (errorFlag) {
         return (
@@ -200,23 +268,21 @@ const Petition = () => {
     {
         return (
             <div>
-                <ResponsiveAppBar />
                 <div
                     style={{display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '0 20px'}}>
-                    <IconButton aria-label="back to petitions" color="secondary" component={Link} to="/"
-                                style={{marginRight: '16px'}}>
-                        <ArrowBackIcon style={{fontSize: 50}}/>
-                    </IconButton>
                     <h1 style={{flex: 1, textAlign: 'center', fontSize: '40px'}}>
                         {petition.title}
                     </h1>
                     {isUserTheOwner && (
                         <Box id={"buttons"} sx={{ marginLeft:'50px', marginTop:'20px',display: 'flex', gap: '50px',}}>
-                            <Link to={'/editPetition/'+ petition.petitionId}><Button variant="contained" sx={{ width: '200px', height: '50px' }}>
+                            <Link to={'/editPetition/'+ petition.petitionId}>
+                                <Button variant="contained" sx={{ width: '200px', height: '50px', backgroundColor: '#ccb44b', '&:hover': {
+                                        backgroundColor: '#a19045',},
+                                }}>
                                 Edit
                             </Button></Link>
-                            <Button variant="contained" sx={{ width: '100px', height: '50px', backgroundColor: '#FF0000', '&:hover': {
-                                    backgroundColor: '#8B0000',
+                            <Button variant="contained" sx={{ width: '100px', height: '50px', backgroundColor: '#8B0000', '&:hover': {
+                                    backgroundColor: '#6e0101',
                                 }, }} onClick={() => setModalOpen(true)}>
                                 Delete
                             </Button>
@@ -244,7 +310,7 @@ const Petition = () => {
                                                     style={{ maxHeight: '100%', maxWidth: '100%', objectFit: 'contain' }}
                                                 />
                                             ) : (
-                                                <ImageNotSupportedIcon sx={{fontSize: '150px'}}></ImageNotSupportedIcon>
+                                                <Diversity2Icon sx={{ color:'grey', fontSize: '10rem'}} />
                                             )}
                                             {errorFlag && <p>Error: {errorMessage}</p>}
                                         </Box>
@@ -293,8 +359,8 @@ const Petition = () => {
                                             <TableRow>
                                                 <TableCell>Support Tier Title</TableCell>
                                                 <TableCell>Description</TableCell>
-                                                <TableCell align="right">Cost</TableCell>
-
+                                                <TableCell align="right">Supporting Cost</TableCell>
+                                                <TableCell align="center">Support</TableCell>
                                             </TableRow>
                                         </TableHead>
                                         <TableBody>
@@ -308,6 +374,12 @@ const Petition = () => {
                                                     </TableCell>
                                                     <TableCell>{row.description}</TableCell>
                                                     <TableCell align="right">${row.cost}</TableCell>
+
+                                                    <Button style={{height:'3rem' }} sx={{backgroundColor: '#4a916e', '&:hover': {backgroundColor: '#327a56',  },}}
+                                                            variant="contained" disabled={petition.ownerId === userId || hasSupported(row.supportTierId)} onClick={() =>(clickSupport(row.supportTierId))}>
+                                                        Support
+                                                    </Button>
+
 
                                                 </TableRow>
                                             ))}
@@ -416,7 +488,11 @@ const Petition = () => {
                                                     </TableCell>
                                                     <TableCell align="right">{formatDate(row.creationDate)}</TableCell>
                                                     <TableCell align="right">${row.supportingCost}</TableCell>
-                                                    <TableCell><Link to={"/petitions/" + row.petitionId}> <Button variant="contained">View</Button> </Link></TableCell>
+                                                    <TableCell><Link to={"/petitions/" + row.petitionId}>
+                                                        <Button style={{backgroundColor:'#4a916e'}} variant="contained">
+                                                            View</Button>
+                                                    </Link>
+                                                    </TableCell>
                                                 </TableRow>
                                             ))}
                                         </TableBody>
@@ -440,9 +516,7 @@ const Petition = () => {
                             </Typography>
                         )}
                         <Box mt={2} display="flex" justifyContent="space-between" sx={{marginTop:'70px'}}>
-                            <Button variant="contained" color="primary" sx={{ width: '200px', height: '50px', backgroundColor: '#FF0000', '&:hover': {
-                                    backgroundColor: '#8B0000', // Dark red color
-                                }, }}
+                            <Button variant="contained" color="primary" sx={{ width: '200px', height: '50px', backgroundColor: '#8B0000', '&:hover': {backgroundColor: '#6e0101',}, }}
                                 onClick={deletePetition}
                             >
                                 Delete
@@ -451,6 +525,49 @@ const Petition = () => {
                                 Cancel
                             </Button>
                         </Box>
+                    </Box>
+                </Modal>
+                <Modal
+                    open={openSupportModal}
+                    onClose={() => setOpenSupportModal(false)}
+                    aria-labelledby="modal-title"
+                    aria-describedby="modal-description"
+                >
+                    <Box
+                        sx={{
+                            position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%, -50%)',
+                            width: 400, bgcolor: 'background.paper', border: '2px solid #000', boxShadow: 24, p: 4,
+                        }}
+                    >
+                        <Typography id="modal-title" variant="h6" component="h2" sx={{ fontSize: '1.5rem', textAlign:'left', marginTop:'1rem'}}>
+                            Dou you want to leave a message?
+                        </Typography>
+                        <Typography id="modal-title" variant="h6" component="h2" sx={{ fontSize: '0.8rem', textAlign:'left', marginLeft:'0.5rem', marginBottom:'1rem'}}>
+                            (optional)
+                        </Typography>
+                        <TextField
+                            id="outlined-basic" variant="outlined" value={message}
+                            onChange={handleDescriptionChange} multiline rows={5}
+                            sx={{ height: '150px', width: '400px', alignSelf: 'center' }}
+                            InputProps={{
+                                sx: { height: '100%' },
+                            }}
+                        />
+                        <Box sx={{display: 'flex', justifyContent: 'center', gap: 2, marginTop: '20px',
+                            }}>
+                            <Button onClick={sendSupporter} variant="contained" style={{ marginTop: '20px' }}>
+                                Save
+                            </Button>
+                            <Button onClick={() => setOpenSupportModal(false)} variant="contained" style={{ marginTop: '20px' }}>
+                                Close
+                            </Button>
+                        </Box>
+                        {errorSupportModalFlag && (
+                            <Typography color="error" sx={{ marginTop: '20px', textAlign:'center'}}>
+                                {errorSupportModalMessage}
+                            </Typography>
+                        )}
+
                     </Box>
                 </Modal>
             </div>

@@ -100,7 +100,7 @@ const Login: React.FC<LoginProps> = ({ handleCloseModal }) => {
                             {errorMessage}
                         </Typography>
                     )}
-                    <Button variant="contained" sx={{marginTop: '70px', height: '60px', color: 'inherit'}}
+                    <Button variant="contained" sx={{ backgroundColor: '#4a916e', '&:hover': {backgroundColor: '#327a56',  }, marginTop: '70px', height: '60px', color: 'inherit'}}
                             onClick={loginUser}>
                         Log In!
                     </Button>

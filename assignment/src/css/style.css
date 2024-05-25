@@ -6,3 +6,20 @@
     width: 7rem;
     height: 2rem;
 }
+
+.button-main-colour {
+    backgoundColor: '#41a372'
+}
+
+
+/*<   Button style={{backgroundColor:'#4a916e'}},  '&:hover': {backgroundColor: '#327a56', }, }}                            */
+
+
+
+/*edit*/
+/*<Button variant="contained" sx={{ backgroundColor: '#ccb44b', '&:hover': {backgroundColor: '#a19045',  }, }}>*/
+
+
+
+/*delete*/
+/*<Button variant="contained" color="primary" sx={{ backgroundColor: '#8B0000', '&:hover': {backgroundColor: '#6e0101',}, }}*/

@@ -92,7 +92,7 @@ const ResponsiveAppBar = () => {
 
     return (
         <>
-            <AppBar position="static">
+            <AppBar position="static" sx={{ backgroundColor: '#38ab92' }}>
                 <Container maxWidth="xl">
                     <Toolbar disableGutters>
                         <Diversity3RoundedIcon sx={{ display: { xs: 'none', md: 'flex' }, mr: 1 }} />
@@ -133,6 +133,16 @@ const ResponsiveAppBar = () => {
                                 >
                                     Create New Petition
                                 </Button>
+                                </Link>
+                            )}
+                            {loggedIn && (
+                                <Link to={"/myPetitions/" + userId} style={{ textDecoration: 'none', color: 'inherit' }}>
+                                    <Button
+                                        key="createPetition"
+                                        sx={{ my: 2, color: 'white', display: 'block', marginLeft:'30px'}}
+                                    >
+                                        My Petition
+                                    </Button>
                                 </Link>
                             )}
                         </Box>

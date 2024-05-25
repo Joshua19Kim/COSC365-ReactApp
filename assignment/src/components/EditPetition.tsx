@@ -51,7 +51,10 @@ const EditPetition: React.FC = () => {
                 setErrorMessage(error.toString())
             })
     }
+    useEffect(() => {
+        getPetition();
 
+    }, [id]);
 
     useEffect(() => {
         getCategories();
@@ -114,7 +117,7 @@ const EditPetition: React.FC = () => {
                     } else if (error.response.statusText.includes("Duplicate petition")) {
                         setErrorMessage("There is the same name of petition.");
                     } else {
-                        setErrorMessage("You typed invalid input. Try again.");
+                        setErrorMessage(error.response.statusText);
                     }
                 }
             )
@@ -142,7 +145,7 @@ const EditPetition: React.FC = () => {
                     } else if (error.response.statusText.includes("photo must be image/jpeg,")) {
                         setModalErrorMessage("You put invalid image. Please put .jpg, .png or .gif.");
                     } else {
-                        setErrorMessage("You posted the invalid file. Try again.");
+                        setErrorMessage(error.response.statusText);
                     }
                 }
             )
@@ -245,9 +248,8 @@ const EditPetition: React.FC = () => {
 
                 </Box>
                 <Button
-                    sx={{marginTop:'5px', marginBottom:'10px'}}
+                    sx={{marginTop:'5px', marginBottom:'10px', backgroundColor: '#8B0000', '&:hover': {backgroundColor: '#6e0101',},}}
                     variant="contained"
-                    style={{ backgroundColor: '#FF0000' }}
                     onClick={() => deleteSupportTiersSlot(aSupportTier.tempId)}
                     disabled={supportTier.length <= 1}
                 >
@@ -279,13 +281,12 @@ const EditPetition: React.FC = () => {
 
     return (
         <div>
-            <ResponsiveAppBar/>
             <Container style={{
                 position: 'relative', flexDirection: 'column', justifyContent: 'center', alignItems: 'center',
                 height: 1000, width: 1300, marginTop:50}}>
 
                 <Box sx={{marginBottom:'20px'}}>
-                    <h1 style={{fontSize: '40px'}}>Edit </h1>
+                    <h1 style={{fontSize: '40px'}}>Edit Petition</h1>
                 </Box>
                 <Container style={{
                     position: 'relative', flexDirection: 'column', justifyContent: 'center', alignItems: 'center',
@@ -338,7 +339,7 @@ const EditPetition: React.FC = () => {
                             </Typography>
                             {supportTier.map(supporttier => addSupportTierForm(supporttier))}
 
-                            <Button sx={{width:'200px', marginTop:'20px', alignSelf:'center'}} variant="contained" onClick={addSupportTiersSlot} disabled={supportTier.length >= 3} >Add Support Tier</Button>
+                            <Button sx={{width:'200px', marginTop:'20px', alignSelf:'center', backgroundColor: '#4a916e', '&:hover': {backgroundColor: '#327a56',  },}} variant="contained" onClick={addSupportTiersSlot} disabled={supportTier.length >= 3} >Add Support Tier</Button>
 
                         </Box>
                     </Box>
@@ -351,9 +352,12 @@ const EditPetition: React.FC = () => {
                         )}
                     </Box>
                     <Box id={"buttons"} sx={{ marginLeft:'50px', marginTop:'20px',display: 'flex', gap: '50px',}}>
-                        <Button variant="contained" sx={{ width: '200px', height: '50px' }} onClick={createPetition}>Create</Button>
+                        <Button variant="contained" sx={{ width: '200px', height: '50px',backgroundColor: '#4a916e', '&:hover': {backgroundColor: '#327a56',  }, }}
+                                // onClick={createPetition}
+                        >
+                            Create</Button>
                         <Link to={'/'}>
-                            <Button variant="contained" sx={{ width: '200px', height: '50px', backgroundColor: '#FF0000' }}>Cancel</Button>
+                            <Button variant="contained" sx={{ width: '200px', height: '50px', backgroundColor: '#8B0000', '&:hover': {backgroundColor: '#6e0101',}, }}>Cancel</Button>
                         </Link>
                     </Box>
 

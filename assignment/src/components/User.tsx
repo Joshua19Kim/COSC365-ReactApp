@@ -277,7 +277,6 @@ const User = () => {
     if (noAccessErrorFlag) {
         return (
             <div>
-                <ResponsiveAppBar />
                 <Container>
                     <h1 style={{flex: 1, textAlign: 'center', fontSize: '40px'}}>
                         User Profile
@@ -292,7 +291,6 @@ const User = () => {
     {
         return (
             <div>
-                <ResponsiveAppBar />
                 <Container>
                     <h1 style={{ textAlign: 'center', fontSize: '40px' }}>
                         User Profile
@@ -323,7 +321,7 @@ const User = () => {
                                     {hasImage && (
                                             <IconButton
                                                 onClick={() => setDeleteModalOpen(true)}
-                                                sx={{ color: 'red', bgcolor: 'background.paper', '&:hover': {bgcolor: 'background.paper'}
+                                                sx={{ color: 'red', bgcolor: 'background.paper', '&:hover': {bgcolor: 'background.paper',}
                                                 }}
                                             ><DeleteForeverIcon/>
                                             </IconButton>
@@ -386,7 +384,7 @@ const User = () => {
                                             </Typography>
                                         )}
                                         <Box sx={{marginTop:'30px',display: 'flex', gap: '50px',alignContent: 'center', alignItems: 'center', flexDirection: 'row', justifyContent: 'center', textAlign: 'center',}}>
-                                            <Button variant="contained" sx={{ width: '200px', height: '50px' }} onClick={handleEditChange}>
+                                            <Button  variant="contained" sx={{ width: '200px', height: '50px',backgroundColor:'#4a916e', '&:hover': {backgroundColor: '#327a56',  }, }} onClick={handleEditChange}>
                                                 Save
                                             </Button>
                                             <Button variant="contained" color="secondary"  onClick={()=>setIsEditMode(false)}  sx={{ width: '200px', height: '50px' }} >
@@ -394,7 +392,7 @@ const User = () => {
                                             </Button>
                                         </Box>
                                         {!wantUpdatePassword && (
-                                            <Button variant="contained" sx={{ width: '200px', height: '50px', marginTop:'40px' }} onClick={()=>setWantUpdatePassword(true)}>
+                                            <Button variant="contained" sx={{ width: '200px', height: '50px', marginTop:'40px', backgroundColor:'#4a916e', '&:hover': {backgroundColor: '#327a56',  }, }} onClick={()=>setWantUpdatePassword(true)}>
                                                 Update password
                                             </Button>
                                         )}
@@ -417,7 +415,8 @@ const User = () => {
                                                     Error: {errorMessage}
                                                 </Typography>
                                             )}
-                                            <Button variant="contained" onClick={()=>setIsEditMode(true)} sx={{ width: '200px', height: '50px', marginTop:' 30px'}}>
+                                            <Button sx={{backgroundColor: '#ccb44b', '&:hover': {
+                                                    backgroundColor: '#a19045',}, width: '200px', height: '50px', marginTop:' 30px' }} variant="contained" onClick={()=>setIsEditMode(true)}>
                                                 Edit
                                             </Button>
                                             {alertVisible && (
@@ -448,9 +447,7 @@ const User = () => {
                             </Typography>
                         )}
                         <Box mt={2} display="flex" justifyContent="space-between" sx={{marginTop:'70px'}}>
-                            <Button variant="contained" color="primary" sx={{ width: '200px', height: '50px', backgroundColor: '#FF0000', '&:hover': {
-                                    backgroundColor: '#8B0000',
-                                }, }}
+                            <Button variant="contained" color="primary" sx={{ width: '200px', height: '50px', backgroundColor: '#8B0000', '&:hover': {backgroundColor: '#6e0101',}, }}
                                     onClick={deleteUserImage}
                             >
                                 Delete
@@ -478,7 +475,7 @@ const User = () => {
                             onChange={handleImageChange}
                         />
                         <label htmlFor="icon-button-file-modal">
-                            <IconButton color="primary" aria-label="upload picture" component="span">
+                            <IconButton sx={{backgroundColor: '#4a916e', '&:hover': {backgroundColor: '#327a56',  },}} aria-label="upload picture" component="span">
                                 <PhotoCamera />
                             </IconButton>
                         </label>
@@ -493,7 +490,7 @@ const User = () => {
                                     {modalErrorMessage}
                                 </Typography>
                             )}
-                            <Button variant="contained" color="primary"
+                            <Button sx={{backgroundColor: '#4a916e', '&:hover': {backgroundColor: '#327a56',  },}} variant="contained" color="primary"
                                     onClick={sendUserImage}
                                 >
                                 Upload

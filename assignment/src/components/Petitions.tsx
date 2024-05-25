@@ -1,11 +1,12 @@
 import axios from 'axios';
-import React, {ChangeEvent, ReactNode} from "react";
+import React, {ChangeEvent, ReactNode, useState} from "react";
 import {Link} from 'react-router-dom';
 import Petition from './Petition';
 import {DataGrid, GridCellParams, GridColDef, GridRowParams} from '@mui/x-data-grid';
 import Container from '@mui/material/Container';
 import { useLocation } from 'react-router-dom';
 import {
+    Alert,
     Box,
     Button,
     Chip,
@@ -20,6 +21,8 @@ import {
 import Avatar from '@mui/material/Avatar';
 import ResponsiveAppBar from './ResponsiveAppBar';
 import ImageNotSupportedIcon from "@mui/icons-material/ImageNotSupported";
+import Diversity2Icon from "@mui/icons-material/Diversity2";
+import CheckIcon from "@mui/icons-material/Check";
 
 const Div = styled('div')(({ theme }) => ({
     ...theme.typography.button,
@@ -46,7 +49,8 @@ const PetitionImageCell = ({ petitionId }: any) => {
     return (
         <>
             {imageError ? (
-                <ImageNotSupportedIcon sx={{ fontSize: '25px' }} />
+                <Diversity2Icon sx={{ color:'grey', fontSize: '40px', marginTop:'2rem' }} />
+
             ) : (
                 <img
                     src={`http://localhost:4941/api/v1/petitions/${petitionId}/image`}
@@ -71,6 +75,8 @@ const Petitions = () => {
     const categoryNames = categories.map(category => category.name);
     const [maximumCost, setMaximumCost] = React.useState("");
     const [chosenCategoriesId, setChosenCategoriesId] = React.useState<Array<number>>([])
+    const [alertVisible, setAlertVisible] = useState(false);
+    const [alertMessage, setAlertMessage] = useState("");
 
 
     const selectingCategories = (event: SelectChangeEvent<typeof categoryName>) => {
@@ -102,7 +108,7 @@ const Petitions = () => {
                 setCategories(response.data)
             }, (error) => {
                 setErrorFlag(true)
-                setErrorMessage(error.toString())
+                setErrorMessage(error.response.statusText);
             })
         }
 
@@ -135,7 +141,7 @@ const Petitions = () => {
                     setPetitions(response.data.petitions)
                 }, (error) => {
                     setErrorFlag(true)
-                    setErrorMessage(error.toString())
+                    setErrorMessage(error.response.statusText);
                 })
             }
 
@@ -146,6 +152,11 @@ const Petitions = () => {
                 setQuery(event.target.value)
             }
             const handleSearchClick = () => {
+                if (query.trim().length === 0) {
+                    setAlertVisible(true)
+                    showAlert("Please enter some vaild words to search.", "warning");
+                    return;
+                }
                 getPetitions()
 
             }
@@ -156,6 +167,13 @@ const Petitions = () => {
             };
 
 
+    const showAlert = (message: React.SetStateAction<string>, severity: React.SetStateAction<string>) => {
+        setAlertMessage(message);
+        setAlertVisible(true);
+        setTimeout(() => {
+            setAlertVisible(false);
+        }, 2000);
+    };
 
             const formatDate = (date : string) => {
                 const formattedDate = new Date(date);
@@ -207,7 +225,7 @@ const Petitions = () => {
                 { field: 'view', headerName: 'View Details', headerAlign: 'center', width: 100, align: 'center', filterable:false, sortable:false,
                     renderCell: (params: GridCellParams) => {
                     const petitionId = params.row.petitionId as number;
-                        return <Link to={"/petitions/" + petitionId}> <Button variant="contained">View</Button> </Link>
+                        return <Link to={"/petitions/" + petitionId}> <Button style={{backgroundColor:'#4a916e'}} variant="contained">View</Button> </Link>
                     }
                 },
 
@@ -230,7 +248,11 @@ const Petitions = () => {
                     return (
 
                         <div>
-                            <ResponsiveAppBar />
+                            {alertVisible && (
+                                <Alert severity="warning" icon={<CheckIcon fontSize="inherit" />}>
+                                    {alertMessage}
+                                </Alert>
+                            )}
                             <h1 style={{fontSize: '40px'}}>Petitions</h1>
                             <Container style={{
                                 position: 'relative',
@@ -245,7 +267,7 @@ const Petitions = () => {
                                     <TextField style={{height: 55, width: '80%'}}
                                                id="outlined-basic" label="Search Petition" variant="outlined"
                                                value={query} onChange={searchPetitionState} onKeyPress={handleKeyPressEnter}/>
-                                    <Button style={{height: 55, width: '20%', fontSize: '1.5rem'}} variant="contained"
+                                    <Button className="button-main-colour" style={{height: 55, width: '20%', fontSize: '1.5rem', backgroundColor:'#4a916e' }}variant="contained"
                                             onClick={handleSearchClick}>Search</Button>
 
                                 </Box>
@@ -286,7 +308,7 @@ const Petitions = () => {
                                         </FormControl>
 
                                 </Box>
-                                <Div style={{color:'blue'}}>Click the column name to sort</Div>
+                                <Div style={{color:'#4a916e'}}>You can sort by clicking the name of Title, Creation date or Supporting cost.</Div>
                                 <Box style={{ height: 715, width: 1400}}>
                                     <DataGrid
                                         rows={petitions}

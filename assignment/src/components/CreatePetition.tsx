@@ -1,4 +1,4 @@
-import React, {ChangeEvent, useEffect, useState} from "react";
+import React, {ChangeEvent, useEffect, useRef, useState} from "react";
 import ResponsiveAppBar from "./ResponsiveAppBar";
 import {
     Box, Button, Card,
@@ -18,10 +18,11 @@ import {Link, useLocation, useNavigate} from "react-router-dom";
 import AddAPhotoIcon from "@mui/icons-material/AddAPhoto";
 import DeleteForeverIcon from "@mui/icons-material/DeleteForever";
 import ImageNotSupportedIcon from "@mui/icons-material/ImageNotSupported";
+import Diversity2Icon from "@mui/icons-material/Diversity2";
 
 
 const CreatePetition: React.FC = () => {
-
+    const maxSignedInt = 2147483647;
     const navigate = useNavigate();
     const location = useLocation();
     const [errorFlag, setErrorFlag] = React.useState(false)
@@ -47,6 +48,8 @@ const CreatePetition: React.FC = () => {
     const [selectedImage, setSelectedImage] = React.useState<File | null>(null);
     const [selectedImagePreview, setSelectedImagePreview] = React.useState<string | null>(null);
 
+
+
     useEffect(() => {
         getCategories();
 
@@ -59,7 +62,6 @@ const CreatePetition: React.FC = () => {
     useEffect(() => {
         sendPetitionImage()
     }, [newPetitionId])
-
 
     const handleClickListItem = (event: React.MouseEvent<HTMLElement>) => {
         setAnchorEl(event.currentTarget);
@@ -84,6 +86,18 @@ const CreatePetition: React.FC = () => {
             setErrorMessage("Please select an image.");
             return;
         }
+        if (title.trim().length === 0) {
+            setErrorFlag(true);
+            setErrorMessage("Please enter the title for your petition.")
+            return;
+        }
+        console.log(description)
+        if (description.trim().length === 0) {
+            setErrorFlag(true);
+            setErrorMessage("Please enter the description for your petition.")
+            return;
+        }
+
         for(let supportier of supportTiers ) {
             if (isNaN(Number(supportier.cost))) {
                 setErrorFlag(true);
@@ -91,15 +105,27 @@ const CreatePetition: React.FC = () => {
                 return
             } else {
                 supportier.cost = Number(supportier.cost)
+                if (supportier.cost > maxSignedInt) {
+                    setErrorFlag(true);
+                    setErrorMessage("Maximum cost number is " + maxSignedInt);
+                    return
+                }
+                if (supportier.title.trim().length === 0) {
+                    setErrorFlag(true);
+                    setErrorMessage("Please enter the support tier title for your petition.")
+                    return
+                }
+                if (supportier.description.trim().length === 0) {
+                    setErrorFlag(true);
+                    setErrorMessage("Please enter the support tier description for your petition.")
+                    return
+                }
+
             }
         }
 
-
         const petitionData: PetitionCreate = {
-            title: title,
-            description: description,
-            categoryId: chosenCategoryId,
-            supportTiers: supportTiers
+            title: title, description: description, categoryId: chosenCategoryId, supportTiers: supportTiers
         };
         await axios.post('http://localhost:4941/api/v1/petitions', petitionData, {
             headers: {'X-Authorization': `${localStorage.getItem("token")}`}
@@ -111,22 +137,32 @@ const CreatePetition: React.FC = () => {
 
             }, (error) => {
                 setErrorFlag(true);
-                if (error.response.statusText.includes("data/title must NOT have")) {
+                if (error.response.statusText.includes("data/title must NOT have fewer than 1 characters")) {
                     setErrorMessage("Please enter the title for your petition.");
-                } else if (error.response.statusText.includes("data/description must NOT")) {
+                } else if (error.response.statusText.includes("data/description must NOT have fewer than 1 characters")) {
                     setErrorMessage("Please enter the description for your petition");
+                } else if (error.response.statusText.includes("data/title must NOT have more than 128 characters")) {
+                    setErrorMessage("Maximum petition length is 128 characters.");
+                } else if (error.response.statusText.includes("data/description must NOT have more than 1024 characters")) {
+                    setErrorMessage("Maximum description length is 1024 characters.");
                 } else if (error.response.statusText.includes("data/categoryId must be")) {
                     setErrorMessage("Select Category!");
-                } else if (error.response.statusText.includes("supportTiers/0/title must NOT")) {
-                    setErrorMessage("Need at least one Support Tier. You haven't entered the title.");
-                } else if (error.response.statusText.includes("data/supportTiers/0/description must NOT")) {
-                    setErrorMessage("Need at least one Support Tier. You haven't entered the description.");
+                } else if (error.response.statusText.includes("supportTiers" && "title must NOT have more than 128 characters")) {
+                    setErrorMessage("Maximum support tier title length is 128.");
+                } else if (error.response.statusText.includes("supportTiers" && "title must NOT")) {
+                    setErrorMessage("You haven't entered the support tier title.");
+                } else if (error.response.statusText.includes("supportTiers" && "description must NOT have more than 1024 characters")) {
+                    setErrorMessage("Maximum support tier description length is 1024 characters.");
+                } else if (error.response.statusText.includes("data/supportTiers" &&"description must NOT")) {
+                    setErrorMessage("You haven't entered the support tier description.");
                 } else if (error.response.statusText.includes("Duplicate petition")) {
                     setErrorMessage("There is the same name of petition.");
-                } else if (error.response.statusText.includes("supportTiers must have unique titles")) {
+                } else if (error.response.statusText.includes("supportTiers" && "must have unique titles")) {
                     setErrorMessage("Each support tier name have to be unique.");
+                } else if (error.response.statusText.includes("supportTiers must NOT have fewer than 1")) {
+                    setErrorMessage("You need at least one support Tier.");
                 } else {
-                    setErrorMessage("You typed invalid input. Try again.");
+                    setErrorMessage(error.response.statusText);
                 }
             }
         )
@@ -150,7 +186,7 @@ const CreatePetition: React.FC = () => {
                 } else if (error.response.statusText.includes("photo must be image/jpeg,")) {
                     setModalErrorMessage("You put invalid image. Please put .jpg, .png or .gif.");
                 } else {
-                    setErrorMessage("You posted the invalid file. Try again.");
+                    setErrorMessage(error.response.statusText);
                 }
                 }
             )
@@ -189,6 +225,7 @@ const CreatePetition: React.FC = () => {
     }
 
     const addSupportTiersSlot = () => {
+
         if(supportTiers.length < 3) {
             setTempId((prevId) => prevId + 1);
             setSupportTiers([...supportTiers, {tempId: tempId, title: "", description: "", cost: 0}])
@@ -250,7 +287,7 @@ const CreatePetition: React.FC = () => {
                         />
                     </Box>
                     <Button
-                        sx={{marginTop:'5px', marginBottom:'10px',  backgroundColor: '#FF0000', '&:hover': {backgroundColor: '#8B0000',},}}
+                        sx={{marginTop:'5px', marginBottom:'10px',backgroundColor: '#8B0000', '&:hover': {backgroundColor: '#6e0101',},}}
                         variant="contained"
                         onClick={() => deleteSupportTiersSlot(aSupportTier.tempId)}
                         disabled={supportTiers.length <= 1}
@@ -275,17 +312,21 @@ const CreatePetition: React.FC = () => {
         setDescription(event.target.value);
     }
     const showImage = () => {
-        setModalOpen(false)
-        setPetitionImage(selectedImagePreview)
-        setSelectedImagePreview(null)
-    }
+        if(selectedImagePreview) {
+            setModalOpen(false)
+            setPetitionImage(selectedImagePreview)
+            setSelectedImagePreview(null)
+        } else {
+            setModalErrorFlag(true)
+            setModalErrorMessage("Please, select an image file.")
+        }
 
+    }
 
 
 
     return (
         <div>
-            <ResponsiveAppBar/>
         <Container style={{
             position: 'relative', flexDirection: 'column', justifyContent: 'center', alignItems: 'center',
             height: 1000, width: 2000, marginTop:50}}>
@@ -297,7 +338,7 @@ const CreatePetition: React.FC = () => {
                 display: 'flex', flexDirection: 'row', justifyContent: 'center', alignItems: 'center', height: 800, width: 2000}}>
                 <Box display="flex" justifyContent="center" sx={{margin:'3rem'}}>
                     <Card sx={{ display: "flex", border: 1, width: 500, height:550, flexDirection: 'column', textAlign: 'center', alignContent:'center',alignItems:'center', boxShadow: 10 }}>
-                        <Card sx={{ display: "flex", border: 1, width: 400, height:400,  textAlign: 'center', margin:'1rem', justifyContent: 'center', alignItems: 'center'}}>
+                        <Box sx={{ display: "flex", width: 400, height:400,  textAlign: 'center', margin:'1rem', justifyContent: 'center', alignItems: 'center'}}>
                             {petitionImage ? (
                                 <img
                                     src={petitionImage}
@@ -305,10 +346,11 @@ const CreatePetition: React.FC = () => {
                                     style={{ maxHeight: '100%', maxWidth: '100%', objectFit: 'contain' }}
                                 />
                             ) : (
-                                <ImageNotSupportedIcon sx={{fontSize: 100, alignSelf:'center',}}></ImageNotSupportedIcon>
-                            )}
+                                <Diversity2Icon sx={{ color:'grey', fontSize: '15rem', alignSelf:'center',}} />
 
-                        </Card>
+                        )}
+
+                        </Box>
                             <IconButton onClick={() => setModalOpen(true)}
                                         sx={{color: '#A7C7E7', bgcolor: 'background.paper',
                                             '&:hover': {bgcolor: 'background.paper'}}}
@@ -321,16 +363,21 @@ const CreatePetition: React.FC = () => {
                 </Box>
 
                 <Box display="flex" justifyContent="center">
-                    <Card sx={{ display: "flex", border: 1, width: 500, height:600, flexDirection: 'column', textAlign: 'center', boxShadow: 10, margin:'3rem' }}>
-                            <Typography textAlign="center" variant="h6" component="h2" sx={{ fontSize: '1.5rem', textAlign:'left', marginTop:'1.5', marginLeft:'3rem'}}>
+                    <Card sx={{ display: "flex", border: 1, width: 500, height:620, flexDirection: 'column', textAlign: 'center', boxShadow: 10, margin:'3rem' }}>
+                            <Typography textAlign="center" variant="h6" component="h2" sx={{ fontSize: '1.5rem', textAlign:'left', marginTop:'1.2rem', marginLeft:'3rem'}}>
                                 Title:
                             </Typography>
                         <TextField id="outlined-basic" variant="outlined" sx={{width:'400px', alignSelf:'center'}}
                                    value={title} onChange={setTitleState} />
+                        <Box sx={{ flexDirection:'row'}}>
+                            <Typography textAlign="center" variant="h6" component="h2" sx={{ fontSize: '1.5rem', textAlign:'left', marginLeft:'3rem', marginTop:'1rem'}}>
+                                Category:
+                            </Typography>
+                            <Typography textAlign="center" variant="h6" component="h2" sx={{ fontSize: '0.8rem', textAlign:'left', marginLeft:'3rem', marginTop:'0rem'}}>
+                                (Select one in the options)
+                            </Typography>
+                        </Box>
 
-                        <Typography textAlign="center" variant="h6" component="h2" sx={{ fontSize: '1.5rem', textAlign:'left', marginLeft:'3rem', marginTop:'1rem'}}>
-                            Category:
-                        </Typography>
 
                         <Box sx={{border: '1px solid', borderColor: 'gray', borderRadius: '8px', width:'400px', height: '50px', alignSelf:'center' }}>
                             <List component="nav" aria-label="Device settings" sx={{ bgcolor: 'background.paper' }}>
@@ -365,9 +412,9 @@ const CreatePetition: React.FC = () => {
                             )}
                         </Box>
                         <Box id={"buttons"} sx={{ alignSelf:'center', marginTop:'5rem',display: 'flex', gap: '50px',}}>
-                            <Button variant="contained" sx={{ width: '200px', height: '50px' }} onClick={createPetition}>Create</Button>
+                            <Button variant="contained"sx={{ width: '200px', height: '50px',backgroundColor:'#4a916e', '&:hover': {backgroundColor: '#327a56',  }, }} onClick={createPetition}>Create</Button>
                             <Link to={'/'}>
-                                <Button variant="contained" sx={{ width: '200px', height: '50px',backgroundColor: '#FF0000', '&:hover': {backgroundColor: '#8B0000',},}}>Cancel</Button>
+                                <Button variant="contained" sx={{ width: '200px', height: '50px',backgroundColor: '#8B0000', '&:hover': {backgroundColor: '#6e0101',},}}>Cancel</Button>
                             </Link>
                         </Box>
                     </Card>
@@ -376,11 +423,15 @@ const CreatePetition: React.FC = () => {
                 <Box id={"supportTiers"} sx={{ display: 'flex', flexDirection: 'column', margin: '3rem', alignContent:'center' }} height={700} width={500} display={"flex"}>
                     <Typography textAlign="center" variant="h6" component="h2" sx={{
                         fontSize: '2rem', textAlign: 'center', marginLeft: '50px', marginTop: '20px', width:'400px'}}>
-                        -Support Tier (Max.3)-
+                        -Support Tier-
+                    </Typography>
+                    <Typography textAlign="center" variant="h6" component="h2" sx={{
+                        fontSize: '0.8rem', textAlign: 'center', marginLeft: '50px', width:'400px'}}>
+                        (Min.1 & Max.3)
                     </Typography>
                     {supportTiers.map(supporttier => addSupportTierForm(supporttier))}
 
-                    <Button sx={{width:'200px', marginTop:'20px', alignSelf:'center'}} variant="contained" onClick={addSupportTiersSlot} disabled={supportTiers.length >= 3} >Add Support Tier</Button>
+                    <Button sx={{width:'200px', marginTop:'20px', alignSelf:'center',backgroundColor:'#4a916e', '&:hover': {backgroundColor: '#327a56',  },}} variant="contained" onClick={addSupportTiersSlot} disabled={supportTiers.length >= 3} >Add Support Tier</Button>
 
                 </Box>
             </Container>
@@ -402,7 +453,7 @@ const CreatePetition: React.FC = () => {
                         onChange={handleImageChange}
                     />
                     <label htmlFor="icon-button-file-modal">
-                        <IconButton color="primary" aria-label="upload picture" component="span">
+                        <IconButton sx={{color:"white" ,backgroundColor:'#4a916e', '&:hover': {backgroundColor: '#327a56',  },}} aria-label="upload picture" component="span">
                             <PhotoCamera />
                         </IconButton>
                     </label>
@@ -417,7 +468,7 @@ const CreatePetition: React.FC = () => {
                                 {modalErrorMessage}
                             </Typography>
                         )}
-                        <Button variant="contained" color="primary" onClick={showImage}>
+                        <Button sx={{backgroundColor:'#4a916e', '&:hover': {backgroundColor: '#327a56',  },}} variant="contained" color="primary" onClick={showImage}>
                             Upload
                         </Button>
                         <Button variant="contained" color="secondary" onClick={() => setModalOpen(false)}>

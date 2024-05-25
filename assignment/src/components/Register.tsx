@@ -66,13 +66,21 @@ const Register = () => {
             }, (error) => {
                 setErrorFlag(true);
 
-                if (error.response.statusText.includes("firstName must NOT")) {
+                if (error.response.statusText.includes("data/firstName must NOT have fewer than 1 characters")) {
                     setErrorMessage("First name must not have fewer than 1 characters.");
-                } else if (error.response.statusText.includes("lastName must NOT")) {
+                } else if (error.response.statusText.includes("data/firstName must NOT have more than 64 characters")) {
+                    setErrorMessage("First name must not have more than 64 characters.");
+                } else if (error.response.statusText.includes("data/lastName must NOT have fewer than 1 characters")) {
                     setErrorMessage("Last name must not have fewer than 1 characters.");
-                } else if (error.response.statusText.includes("data/email")) {
+                } else if (error.response.statusText.includes("data/lastName must NOT have more than 64 characters")) {
+                    setErrorMessage("Last name must not have more than 64 characters.");
+                } else if (error.response.statusText.includes("data/email must NOT have more than 256 characters")) {
+                    setErrorMessage("Email must not have more than 256 characters");
+                } else if (error.response.statusText.includes("data/email must match format")) {
                     setErrorMessage("Email must match the format 'email'.");
-                } else if (error.response.statusText.includes("password must NOT")) {
+                } else if (error.response.statusText.includes("data/password must NOT have more than 64 characters")) {
+                    setErrorMessage("Password must not have more than 64 characters.");
+                } else if (error.response.statusText.includes("data/password must NOT have fewer than 6 characters")) {
                     setErrorMessage("Password must not have fewer than 6 characters.");
                 } else if (error.response.statusText.includes("Email already in")) {
                     setErrorMessage("Email is already in use.");
@@ -115,6 +123,7 @@ const Register = () => {
                     setModalErrorMessage("");
                     setModalOpen(false);
                     navigate('/user/' + newUserId)
+                    window.location.reload()
                 }, (error) => {
                     setModalErrorFlag(true);
                     if (error.response.statusText.includes("Payload Too Large")) {
@@ -148,7 +157,12 @@ const Register = () => {
         }
     }
 
+    const closeAllModal = async () => {
 
+        setModalOpen(false)
+        navigate('/user/'+ newUserId)
+        window.location.reload()
+    }
 
 
     return (
@@ -196,7 +210,7 @@ const Register = () => {
                         {errorMessage}
                     </Typography>
                 )}
-                <Button variant="contained" sx={{ marginTop: '70px', height: '60px', color: 'inherit' }} onClick={registerUser}>
+                <Button variant="contained" sx={{ marginTop: '70px', height: '60px', color: 'inherit',backgroundColor: '#4a916e', '&:hover': {backgroundColor: '#327a56',  }, }} onClick={registerUser}>
                     Register!
                 </Button>
 
@@ -219,7 +233,7 @@ const Register = () => {
                         onChange={handleImageChange}
                     />
                     <label htmlFor="icon-button-file-modal">
-                        <IconButton color="primary" aria-label="upload picture" component="span">
+                        <IconButton sx={{color:'white', backgroundColor: '#4a916e', '&:hover': {backgroundColor: '#327a56',  },}} aria-label="upload picture" component="span">
                             <PhotoCamera />
                         </IconButton>
                     </label>
@@ -234,10 +248,10 @@ const Register = () => {
                                 {modalErrorMessage}
                             </Typography>
                         )}
-                        <Button variant="contained" color="primary" onClick={sendUserImage}>
+                        <Button sx={{backgroundColor: '#4a916e', '&:hover': {backgroundColor: '#327a56',  },}} variant="contained" color="primary" onClick={sendUserImage}>
                             Upload
                         </Button>
-                        <Button variant="contained" color="secondary" onClick={() => navigate('/user/' + newUserId)}>
+                        <Button variant="contained" color="secondary" onClick={() => closeAllModal()}>
                             Skip
                         </Button>
                     </Box>
